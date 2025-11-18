@@ -4,41 +4,29 @@ export const useConfigStore = defineStore('config', () => {
   const route = useRoute()
   const { showErrorMessage } = useNotifications()
 
-  const { data: projects, error: projectsError } = useFetch<ProjectsConfig[]>(`/api/config/projects`)
+  const { data: projectsList, error: projectsError } = useFetch<ProjectsConfig[]>(`/api/config/projects`, {
+    default: () => []
+  })
 
-  const selectedProject = ref<ProjectsConfig | undefined>(projects.value?.find((project) => project.id === route.params.project))
+  const selectedProject = ref<ProjectsConfig | null>(
+    projectsList.value.find((project) => project.id === route.params.project) || null
+  )
 
-  function setSelectedProject(project?: DropdownMenuItem) {
+  function setSelectedProject(project?: ProjectsConfig) {
     if (!project) {
-      selectedProject.value = undefined
+      selectedProject.value = null
       return
     }
 
-    selectedProject.value = {
-      id: project.id,
-      label: project.label,
-      icon: project.icon as string,
-      to: project.to
-    }
+    selectedProject.value = project
   }
-
-  const projectsList = computed<ProjectsConfig[] | null>(() => {
-    if (!projects.value) {
-      return null
-    }
-
-    return projects.value.map((project) => ({
-      ...project,
-      to: `/${project.id}`
-    }))
-  })
 
   onMounted(() => {
     if (projectsError.value) {
       showErrorMessage(projectsError.value)
     }
 
-    selectedProject.value = projects.value?.find((project) => project.id === route.params.project)
+    selectedProject.value = projectsList.value.find((project) => project.id === route.params.project) || null
   })
 
   return {

@@ -5,9 +5,10 @@ export const useNavigationStore = defineStore('navigation', () => {
   const { ui } = useAppConfig()
   const localePath = useLocalePath()
   const { user, logout } = useCurrentUser()
-  const { projectsList, selectedProject } = storeToRefs(useConfigStore())
+  const { projectsList } = storeToRefs(useConfigStore())
   const { setSelectedProject } = useConfigStore()
   const colorMode = useColorMode()
+  const route = useRoute()
 
   const colors = [
     'red',
@@ -30,10 +31,6 @@ export const useNavigationStore = defineStore('navigation', () => {
   ]
   const neutrals = ['slate', 'gray', 'zinc', 'neutral', 'stone']
 
-  const onSelect = (project) => {
-    setSelectedProject(project)
-  }
-
   const userNavigation = computed<DropdownMenuItem[][]>(() => [
     [
       {
@@ -41,7 +38,7 @@ export const useNavigationStore = defineStore('navigation', () => {
         label: user.value?.name,
         avatar: {
           src: user.value?.avatar,
-          alt: user.value?.name || '',
+          alt: user.value?.name || ''
         }
       }
     ],
@@ -144,19 +141,30 @@ export const useNavigationStore = defineStore('navigation', () => {
   ])
 
   const taxonomy = computed<NavigationMenuItem[] | null>(() => {
-    if (!projectsList.value) {
-      return null
-    }
-
     return projectsList.value.map((project) => ({
       ...project,
-      to: localePath(`/${project.id}`),
-      collapsible: true,
-      defaultOpen: selectedProject.value?.id === project.id,
+      defaultOpen: true,
+      active: project.id === route.params.project,
       children: [
-        { label: t('navigation.general'), icon: ui.icons.dashboard, to: localePath(`/${project.id}`), exact: true, onSelect: () => setSelectedProject(project) },
-        { label: t('navigation.envs'), icon: ui.icons.appWindow, to: localePath(`/${project.id}/envs`), onSelect: () => setSelectedProject(project) },
-        { label: t('navigation.tests'), icon: ui.icons.list, to: localePath(`/${project.id}/tests`), onSelect: () => setSelectedProject(project) }
+        {
+          label: t('navigation.panel'),
+          icon: ui.icons.controlPanel,
+          to: localePath(`/${project.id}`),
+          exact: true,
+          onSelect: () => setSelectedProject(project)
+        },
+        {
+          label: t('navigation.envs'),
+          icon: ui.icons.appWindow,
+          to: localePath(`/${project.id}/envs`),
+          onSelect: () => setSelectedProject(project)
+        },
+        {
+          label: t('navigation.reports'),
+          icon: ui.icons.bookImage,
+          to: localePath(`/${project.id}/reports`),
+          onSelect: () => setSelectedProject(project)
+        }
       ],
       onSelect: () => setSelectedProject(project)
     }))

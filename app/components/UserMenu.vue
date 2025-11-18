@@ -23,7 +23,7 @@ const { userNavigation } = storeToRefs(useNavigationStore())
         ...user,
         avatar: {
           src: user?.avatar,
-          alt: user?.name || '',
+          alt: user?.name || ''
         },
         label: collapsed ? undefined : user?.name,
         trailingIcon: collapsed ? undefined : ui.icons.chevronsUpDown

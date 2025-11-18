@@ -14,10 +14,10 @@ const icons = {
   userLock: 'i-lucide-user-lock',
   // custom
   appWindow: 'i-lucide-app-window',
+  bookImage: 'i-lucide-book-image',
   chevronsUpDown: 'i-lucide-chevrons-up-down',
-  dashboard: 'i-lucide-chart-no-axes-combined',
+  controlPanel: 'i-lucide-sliders-vertical',
   image: 'i-lucide-image',
-  list: 'i-lucide-list',
   logout: 'i-lucide-log-out',
   palette: 'i-lucide-palette',
   sunMoon: 'i-lucide-sun-moon',

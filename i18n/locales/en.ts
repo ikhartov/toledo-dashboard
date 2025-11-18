@@ -24,7 +24,7 @@ export default {
     github: 'GitHub repository',
     neutral: 'Neutral',
     primary: 'Primary',
-    theme: 'Theme',
+    theme: 'Theme'
   },
   mode: {
     dark: 'Dark',
@@ -32,9 +32,9 @@ export default {
     system: 'System'
   },
   navigation: {
-    general: 'General',
     envs: 'Environments',
-    tests: 'Tests list'
+    panel: 'Control panel',
+    reports: 'Reports'
   },
   user: {
     logout: 'Logout'

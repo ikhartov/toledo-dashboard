@@ -1,10 +1,10 @@
 <script setup lang="ts">
 definePageMeta({
   middleware: 'auth',
-  breadcrumb: 'envs'
+  breadcrumb: 'reports'
 })
 </script>
 
 <template>
-  <div>Envs page</div>
+  <div>Tests list page</div>
 </template>

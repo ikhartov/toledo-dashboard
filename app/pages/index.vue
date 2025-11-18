@@ -14,7 +14,7 @@ const { setSelectedProject } = useConfigStore()
     <div v-for="project in projectsList" :key="project.id">
       <UPageCard
         v-bind="ui.presets.pageCard.dashboard"
-        :to="project.to"
+        :to="`/${project.id}`"
         :title="t('home.card.title')"
         :description="project.label"
         :icon="project.icon"

@@ -1,5 +1,4 @@
 import type { H3Error } from 'h3'
-import type { RouteLocationRaw } from 'vue-router'
 
 export type ServerError = Partial<H3Error>
 
@@ -18,7 +17,6 @@ export interface ObservableObj {
 
 export interface ProjectsConfig {
   id: string
-  label?: string
+  label: string
   icon?: string
-  to?: RouteLocationRaw
 }

@@ -17,7 +17,7 @@
     "lintfix": "eslint . --fix && prettier --write --list-different ."
   },
   "devDependencies": {
-    "@nuxt/eslint": "^1.9.0",
+    "@nuxt/eslint": "^1.10.0",
     "@types/node": "^22.19.0",
     "eslint": "^9.38.0",
     "eslint-config-prettier": "^10.1.8",
