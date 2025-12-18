@@ -1,3 +1,7 @@
+import { NITRO_ROUTE_RULES } from './config'
+
+console.log(NITRO_ROUTE_RULES)
+
 // https://nuxt.com/docs/api/configuration/nuxt-config
 export default defineNuxtConfig({
   modules: ['@pinia/nuxt', '@nuxtjs/i18n', '@nuxt/ui', '@nuxtjs/google-fonts', 'nuxt-auth-utils', '@nuxt/eslint'],
@@ -17,6 +21,10 @@ export default defineNuxtConfig({
     }
   },
   compatibilityDate: '2025-07-15',
+  nitro: {
+    serveStatic: true,
+    routeRules: NITRO_ROUTE_RULES
+  },
   eslint: {
     config: {
       stylistic: true

@@ -1,21 +1,6 @@
-import type { ProjectsConfig } from '~~/shared/types'
+import type { ProjectConfig } from '~~/shared/types'
+import { PROJECTS_LIST } from '~~/config'
 
-export default defineEventHandler(async (): Promise<ProjectsConfig[]> => {
-  return [
-    {
-      id: 'thor',
-      label: 'Thor',
-      icon: 'i-lucide-command'
-    },
-    {
-      id: 'vegas',
-      label: 'Vegas',
-      icon: 'i-lucide-sunset'
-    },
-    {
-      id: 'bond',
-      label: 'Bond',
-      icon: 'i-lucide-bold'
-    }
-  ]
+export default defineEventHandler(async (): Promise<ProjectConfig[]> => {
+  return PROJECTS_LIST
 })

@@ -15,8 +15,17 @@ export interface ObservableObj {
   clients?: number
 }
 
-export interface ProjectsConfig {
+export interface ProjectConfig {
   id: string
+  apiUrl: string
   label: string
   icon?: string
+}
+
+export interface Report {
+  name: string
+  result: {
+    passed: number
+    failed: number
+  }
 }

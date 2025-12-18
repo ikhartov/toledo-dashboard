@@ -6,7 +6,6 @@ export const useNavigationStore = defineStore('navigation', () => {
   const localePath = useLocalePath()
   const { user, logout } = useCurrentUser()
   const { projectsList } = storeToRefs(useConfigStore())
-  const { setSelectedProject } = useConfigStore()
   const colorMode = useColorMode()
   const route = useRoute()
 
@@ -66,6 +65,28 @@ export const useNavigationStore = defineStore('navigation', () => {
 
                 ui.colors.primary = color
                 window.localStorage.setItem('nuxt-ui-primary', color)
+              }
+            }))
+          },
+          {
+            label: t('menu.secondary'),
+            slot: 'chip',
+            chip: ui.colors.secondary,
+            content: {
+              align: 'center',
+              collisionPadding: 16
+            },
+            children: colors.map((color) => ({
+              label: color,
+              chip: color,
+              slot: 'chip',
+              checked: ui.colors.secondary === color,
+              type: 'checkbox',
+              onSelect: (e) => {
+                e.preventDefault()
+
+                ui.colors.secondary = color
+                window.localStorage.setItem('nuxt-ui-secondary', color)
               }
             }))
           },
@@ -140,38 +161,37 @@ export const useNavigationStore = defineStore('navigation', () => {
     ]
   ])
 
+  const getProjectNavigation = (projectId: string): NavigationMenuItem[] => [
+    {
+      label: t('navigation.panel'),
+      icon: ui.icons.controlPanel,
+      to: localePath(`/${projectId}`),
+      exact: true,
+    },
+    {
+      label: t('navigation.envs'),
+      icon: ui.icons.appWindow,
+      to: localePath(`/${projectId}/envs`),
+    },
+    {
+      label: t('navigation.reports'),
+      icon: ui.icons.bookImage,
+      to: localePath(`/${projectId}/reports`),
+    }
+  ]
+
   const taxonomy = computed<NavigationMenuItem[] | null>(() => {
     return projectsList.value.map((project) => ({
       ...project,
       defaultOpen: true,
       active: project.id === route.params.project,
-      children: [
-        {
-          label: t('navigation.panel'),
-          icon: ui.icons.controlPanel,
-          to: localePath(`/${project.id}`),
-          exact: true,
-          onSelect: () => setSelectedProject(project)
-        },
-        {
-          label: t('navigation.envs'),
-          icon: ui.icons.appWindow,
-          to: localePath(`/${project.id}/envs`),
-          onSelect: () => setSelectedProject(project)
-        },
-        {
-          label: t('navigation.reports'),
-          icon: ui.icons.bookImage,
-          to: localePath(`/${project.id}/reports`),
-          onSelect: () => setSelectedProject(project)
-        }
-      ],
-      onSelect: () => setSelectedProject(project)
+      children: getProjectNavigation(project.id),
     }))
   })
 
   return {
     taxonomy,
-    userNavigation
+    userNavigation,
+    getProjectNavigation
   }
 })

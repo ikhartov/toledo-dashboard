@@ -4,7 +4,7 @@ export default defineNuxtPlugin({
     const appConfig = useAppConfig()
 
     if (import.meta.client) {
-      function updateColor(type: 'primary' | 'neutral') {
+      function updateColor(type: 'primary' | 'secondary' | 'neutral') {
         const color = localStorage.getItem(`nuxt-ui-${type}`)
         if (color) {
           appConfig.ui.colors[type] = color
@@ -12,6 +12,7 @@ export default defineNuxtPlugin({
       }
 
       updateColor('primary')
+      updateColor('secondary')
       updateColor('neutral')
     }
 
@@ -27,6 +28,15 @@ export default defineNuxtPlugin({
               if (primaryColor !== 'black') {
                 html = html.replace(
                   /(--ui-color-primary-\\d{2,3}:\\s*var\\(--color-)${appConfig.ui.colors.primary}(-\\d{2,3}.*?\\))/g,
+                  \`$1\${primaryColor}$2\`
+                );
+              }
+            }
+            if (localStorage.getItem('nuxt-ui-secondary')) {
+              const primaryColor = localStorage.getItem('nuxt-ui-secondary');
+              if (primaryColor !== 'black') {
+                html = html.replace(
+                  /(--ui-color-secondary-\\d{2,3}:\\s*var\\(--color-)${appConfig.ui.colors.secondary}(-\\d{2,3}.*?\\))/g,
                   \`$1\${primaryColor}$2\`
                 );
               }

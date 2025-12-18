@@ -21,6 +21,9 @@ const icons = {
   logout: 'i-lucide-log-out',
   palette: 'i-lucide-palette',
   sunMoon: 'i-lucide-sun-moon',
+  arrowNarrowUp: 'i-lucide-arrow-up-narrow-wide',
+  arrowNarrowDown: 'i-lucide-arrow-down-wide-narrow',
+  arrowUpDown: 'i-lucide-arrow-up-down',
   // default
   arrowDown: 'i-lucide-arrow-down',
   arrowLeft: 'i-lucide-arrow-left',
@@ -83,7 +86,7 @@ const presets: UiPresets = {
 export default defineAppConfig({
   theme: { darkColor: '', lightColor: '' },
   ui: {
-    colors: { primary: 'yellow', neutral: 'gray' },
+    colors: { primary: 'yellow', neutral: 'gray', secondary: 'amber' },
     icons,
     presets
   }

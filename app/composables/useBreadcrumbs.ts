@@ -3,7 +3,6 @@ export function useBreadcrumbs() {
   const route = useRoute()
   const router = useRouter()
   const localePath = useLocalePath()
-  const { setSelectedProject } = useConfigStore()
 
   const breadcrumbs = computed(() => {
     let currentPath = ''
@@ -24,7 +23,7 @@ export function useBreadcrumbs() {
         }
       })
 
-    return [{ label: t('breadcrumbs.home'), to: localePath('/'), onClick: () => setSelectedProject() }, ...crumbs]
+    return [{ label: t('breadcrumbs.home'), to: localePath('/') }, ...crumbs]
   })
 
   return { breadcrumbs }

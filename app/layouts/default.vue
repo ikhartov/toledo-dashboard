@@ -42,11 +42,7 @@ const open = ref(false)
 
     <UDashboardPanel id="content" class="bg-elevated/25">
       <AppNavbar />
-      <main class="h-full flex flex-col">
-        <div class="p-4 sm:px-6 flex-1 flex flex-col overflow-y-auto">
-          <slot />
-        </div>
-      </main>
+      <slot />
     </UDashboardPanel>
   </UDashboardGroup>
 </template>
