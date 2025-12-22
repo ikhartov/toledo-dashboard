@@ -12,6 +12,7 @@ const icons = {
   github: 'i-custom-github',
   // login
   userLock: 'i-lucide-user-lock',
+  userRoundCog: 'i-lucide-user-round-cog',
   // custom
   appWindow: 'i-lucide-app-window',
   bookImage: 'i-lucide-book-image',

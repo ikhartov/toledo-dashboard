@@ -21,6 +21,7 @@ export default {
   },
   login: {
     providers: {
+      dev: 'Developer mode',
       github: 'Continue with GitHub',
       google: 'Continue with Google'
     },
