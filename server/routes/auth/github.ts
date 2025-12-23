@@ -15,7 +15,7 @@ export default defineOAuthGitHubEventHandler({
       try {
         const userData = {
           avatar: user.avatar_url,
-          email: user.email,
+          email: user.email ?? '',
           name: user.name
         }
         await setUserSession(event, { user: userData })
