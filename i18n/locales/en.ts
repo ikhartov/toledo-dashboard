@@ -49,9 +49,9 @@ export default {
     columns: {
       failed: 'Failed',
       name: 'Report name',
-      passed: 'Passed',
+      passed: 'Passed'
     },
-    filter: 'Filter by name',
+    filter: 'Filter by name'
   },
   user: {
     logout: 'Logout'
