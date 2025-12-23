@@ -166,17 +166,17 @@ export const useNavigationStore = defineStore('navigation', () => {
       label: t('navigation.panel'),
       icon: ui.icons.controlPanel,
       to: localePath(`/${projectId}`),
-      exact: true,
+      exact: true
     },
     {
       label: t('navigation.envs'),
       icon: ui.icons.appWindow,
-      to: localePath(`/${projectId}/envs`),
+      to: localePath(`/${projectId}/envs`)
     },
     {
       label: t('navigation.reports'),
       icon: ui.icons.bookImage,
-      to: localePath(`/${projectId}/reports`),
+      to: localePath(`/${projectId}/reports`)
     }
   ]
 
@@ -185,7 +185,7 @@ export const useNavigationStore = defineStore('navigation', () => {
       ...project,
       defaultOpen: true,
       active: project.id === route.params.project,
-      children: getProjectNavigation(project.id),
+      children: getProjectNavigation(project.id)
     }))
   })
 

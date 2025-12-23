@@ -21,6 +21,7 @@ export default {
   },
   login: {
     providers: {
+      dev: 'Developer mode',
       github: 'Continue with GitHub',
       google: 'Continue with Google'
     },
@@ -48,9 +49,9 @@ export default {
     columns: {
       failed: 'Failed',
       name: 'Report name',
-      passed: 'Passed',
+      passed: 'Passed'
     },
-    filter: 'Filter by name',
+    filter: 'Filter by name'
   },
   user: {
     logout: 'Logout'

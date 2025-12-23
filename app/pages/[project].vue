@@ -3,7 +3,12 @@ const { getProjectNavigation } = useNavigationStore()
 
 const route = useRoute()
 
-const links = computed(() => getProjectNavigation(route.params.project))
+const links = computed(() => {
+  if (!route.params.project) {
+    return []
+  }
+  return getProjectNavigation(route.params.project as string)
+})
 </script>
 
 <template>

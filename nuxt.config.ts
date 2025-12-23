@@ -1,7 +1,5 @@
 import { NITRO_ROUTE_RULES } from './config'
 
-console.log(NITRO_ROUTE_RULES)
-
 // https://nuxt.com/docs/api/configuration/nuxt-config
 export default defineNuxtConfig({
   modules: ['@pinia/nuxt', '@nuxtjs/i18n', '@nuxt/ui', '@nuxtjs/google-fonts', 'nuxt-auth-utils', '@nuxt/eslint'],
@@ -18,6 +16,9 @@ export default defineNuxtConfig({
     session: {
       maxAge: 60 * 60 * 24 * 7, // 1 week
       password: process.env.NUXT_SESSION_PASSWORD || ''
+    },
+    public: {
+      isDev: process.env.NODE_ENV === 'development'
     }
   },
   compatibilityDate: '2025-07-15',
