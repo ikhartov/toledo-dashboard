@@ -41,7 +41,7 @@ const bulkDelete = ref<Record<string, boolean | undefined>>({})
 const table = useTemplateRef('table')
 const columnFilters = ref([{ id: 'name', value: '' }])
 const rowSelection = ref({})
-const sorting = ref([{ id: 'name', desc: true }])
+const sorting = ref([{ id: 'name', desc: false }])
 
 function toggleBackupModal(row: ReportTableRow) {
   isBackupModalOpen.value = !isBackupModalOpen.value

@@ -5,10 +5,18 @@ export default {
     backupSelected: 'Backup reports',
     delete: 'Delete',
     deleteSelected: 'Delete reports',
-    open: 'Open'
+    jira: 'Jira Ticket',
+    open: 'Open',
+    showReport: 'Show report',
+    startTest: 'Start test'
   },
   breadcrumbs: {
     home: 'Home'
+  },
+  envs: {
+    columns: {
+      name: 'Environment name'
+    }
   },
   global: {
     appName: 'ToledoDashboard',
