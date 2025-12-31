@@ -14,6 +14,7 @@ definePageMeta({
   breadcrumb: 'reports'
 })
 
+const UBadge = resolveComponent('UBadge')
 const UButton = resolveComponent('UButton')
 const UCheckbox = resolveComponent('UCheckbox')
 
@@ -57,8 +58,8 @@ const isRowsSelected = computed(() => Object.keys(bulkDelete.value).length)
 const items = computed(() => {
   return data.value.map((report) => ({
     name: report.name,
-    failed: report.result.failed,
-    passed: report.result.passed
+    status: report.result.failed ? 'failed' : report.result.passed ? 'passed' : 'pending',
+    result: { passed: report.result.passed, failed: report.result.failed }
   }))
 })
 
@@ -115,39 +116,68 @@ const columns: TableColumn<ReportTableRow>[] = [
         class: '-mx-2.5',
         onClick: () => column.toggleSorting(column.getIsSorted() === 'asc')
       })
+    },
+    cell: ({ row }) => {
+      return h('span', { class: 'font-semibold' }, row.getValue('name'))
     }
   },
-  { accessorKey: 'failed', header: t('reports.columns.failed') },
-  { accessorKey: 'passed', header: t('reports.columns.passed') },
   {
-    id: 'open',
+    accessorKey: 'status',
+    header: t('reports.columns.status'),
     cell: ({ row }) => {
-      return h(UButton, {
-        label: t('actions.open'),
-        to: `/${route.params.project}/reports/${row.original.name}`
+      const color = {
+        passed: 'success' as const,
+        failed: 'error' as const,
+        pending: 'neutral' as const
+      }[row.getValue('status') as string]
+
+      return h(UBadge, { variant: 'subtle', color }, () => {
+        return t(`reports.status.${row.getValue('status')}`)
       })
     }
   },
   {
-    id: 'backup',
+    accessorKey: 'result',
+    header: t('reports.columns.result'),
     cell: ({ row }) => {
-      return h(UButton, {
-        label: t('actions.backup'),
-        variant: 'outline',
-        color: 'secondary',
-        onSelect: () => toggleBackupModal(row.original)
+      const result = row.getValue('result') as object
+      const colorMap = {
+        passed: 'text-success',
+        failed: 'text-error'
+      }
+
+      const content = Object.entries(result).map(([label, value]) => {
+        return h(
+          'span',
+          { class: `${colorMap[label as keyof typeof colorMap]}` },
+          `${t(`reports.status.${label}`)}: ${value}`
+        )
       })
+
+      return h('div', { class: 'flex gap-4 sm:flex-col sm:gap-1' }, content)
     }
   },
   {
-    id: 'delete',
+    id: 'actions',
     cell: ({ row }) => {
-      return h(UButton, {
-        label: t('actions.delete'),
-        variant: 'outline',
-        color: 'error',
-        onSelect: () => toggleDeleteModal(row.original)
-      })
+      return h('div', { class: 'flex gap-8 justify-between sm:justify-end' }, [
+        h(UButton, {
+          label: t('actions.open'),
+          to: `/${route.params.project}/reports/${row.original.name}`
+        }),
+        h(UButton, {
+          label: t('actions.backup'),
+          variant: 'outline',
+          color: 'secondary',
+          onSelect: () => toggleBackupModal(row.original)
+        }),
+        h(UButton, {
+          label: t('actions.delete'),
+          variant: 'outline',
+          color: 'error',
+          onSelect: () => toggleDeleteModal(row.original)
+        })
+      ])
     }
   }
 ]
@@ -157,19 +187,11 @@ const columns: TableColumn<ReportTableRow>[] = [
   <UiDashboardContent class="pb-24 h-full">
     <UPageGrid class="h-full">
       <UPageCard
-        variant="naked"
-        class="col-span-3 2xl:col-span-1"
-        :title="t('budget.expenses.title')"
-        :description="t('budget.expenses.description')"
-      >
-        <template #footer> </template>
-      </UPageCard>
-      <UPageCard
-        class="col-span-3 2xl:col-span-2 h-full overflow-auto"
+        class="col-span-3 h-full overflow-auto"
         :ui="{ header: 'w-full mb-0', container: 'lg:flex', wrapper: 'flex-0' }"
       >
         <template #header>
-          <div class="w-full flex gap-2 justify-between">
+          <div class="w-full flex flex-wrap gap-2 justify-between">
             <UInput
               :model-value="table?.tableApi?.getColumn('name')?.getFilterValue() as string"
               class="max-w-sm"
@@ -191,6 +213,11 @@ const columns: TableColumn<ReportTableRow>[] = [
           class="border-t border-accented"
           :columns="columns"
           :data="items"
+          :ui="{
+            th: 'hidden first:table-cell nth-2:table-cell nth-2:col-span-3 lg:table-cell',
+            tr: 'grid grid-cols-[33px_repeat(3,minmax(0,1fr))] sm:items-center lg:table-row',
+            td: 'nth-2:col-span-2 nth-2:whitespace-pre-wrap nth-3:text-right lg:nth-3:text-left nth-4:col-start-2 nth-4:col-span-2 sm:nth-4:col-start-2 sm:nth-4:col-span-1 nth-5:col-start-2 nth-5:col-span-3 sm:nth-5:col-start-3 sm:nth-5:col-span-2'
+          }"
           sticky
         />
       </UPageCard>

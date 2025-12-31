@@ -47,11 +47,16 @@ export default {
   },
   reports: {
     columns: {
-      failed: 'Failed',
       name: 'Report name',
-      passed: 'Passed'
+      result: 'Result',
+      status: 'Status'
     },
-    filter: 'Filter by name'
+    filter: 'Filter by name',
+    status: {
+      failed: 'Failed',
+      passed: 'Passed',
+      pending: 'Pending'
+    }
   },
   user: {
     logout: 'Logout'
