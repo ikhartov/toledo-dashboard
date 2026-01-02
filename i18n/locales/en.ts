@@ -3,15 +3,44 @@ export default {
   actions: {
     backup: 'Backup',
     backupSelected: 'Backup reports',
+    createReference: 'Create reference',
     delete: 'Delete',
     deleteSelected: 'Delete reports',
-    open: 'Open'
+    jira: 'Jira Ticket',
+    open: 'Open',
+    showReport: 'Show report',
+    startSelectedTest: 'Start selected test',
+    startTest: 'Start test'
   },
   breadcrumbs: {
     home: 'Home'
   },
+  controlPanel: {
+    columns: {
+      name: 'Test name'
+    },
+    diskUsage: {
+      description: '{label} {used} mb / {total} mb',
+      reference: 'References:',
+      test: 'Tests:',
+      title: 'Disk space usage'
+    },
+    reference: {
+      page: 'References page',
+      title: 'References'
+    },
+    test: {
+      title: 'Start new test'
+    }
+  },
+  envs: {
+    columns: {
+      name: 'Environment name'
+    }
+  },
   global: {
     appName: 'ToledoDashboard',
+    filter: 'Filter by name',
     title: 'Toledo Dashboard'
   },
   home: {
@@ -47,11 +76,15 @@ export default {
   },
   reports: {
     columns: {
-      failed: 'Failed',
       name: 'Report name',
-      passed: 'Passed'
+      result: 'Result',
+      status: 'Status'
     },
-    filter: 'Filter by name'
+    status: {
+      failed: 'Failed',
+      passed: 'Passed',
+      pending: 'Pending'
+    }
   },
   user: {
     logout: 'Logout'

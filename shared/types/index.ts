@@ -29,3 +29,13 @@ export interface Report {
     failed: number
   }
 }
+
+export interface DiskSpace {
+  testFolderSize: number
+  referenceFolderSize: number
+}
+
+export interface Scenario {
+  label: string
+  url: string
+}

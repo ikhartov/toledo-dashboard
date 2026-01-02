@@ -5,6 +5,7 @@ const { ui } = useAppConfig()
 const { taxonomy } = storeToRefs(useNavigationStore())
 
 const open = ref(false)
+const { isMediaMatch: isLargeView } = useMediaQuery(MediaMaxBreakpoints.XL)
 </script>
 
 <template>
@@ -12,6 +13,7 @@ const open = ref(false)
     <UDashboardSidebar
       id="default"
       v-model:open="open"
+      :collapsed="isLargeView"
       collapsible
       resizable
       class="bg-elevated/25"

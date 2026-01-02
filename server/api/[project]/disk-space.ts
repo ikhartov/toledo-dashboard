@@ -1,3 +1,4 @@
+import type { DiskSpace } from '~~/shared/types'
 import { throwError } from '~~/server/helpers/throwError'
 
 export default defineEventHandler(async (event) => {
@@ -9,11 +10,9 @@ export default defineEventHandler(async (event) => {
       return { data: null, error: 'projectId is not defined' }
     }
 
-    const data = await $fetch(`/_${projectId}/api/spase-usage`)
-
-    return { data, error: null }
+    return await $fetch<DiskSpace>(`/_${projectId}/api/spase-usage`)
   } catch (error) {
     throwError(error, 'GET_PROJECT_DISK_SPACE_ERROR')
-    return { data: null, error }
+    return null
   }
 })
