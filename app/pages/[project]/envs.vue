@@ -62,19 +62,19 @@ const columns: TableColumn<EnvironmentsTableRow>[] = [
       return h('div', { class: 'flex flex-wrap gap-4 lg:gap-8 justify-between sm:justify-end' }, [
         h(UButton, {
           label: t('actions.startTest'),
-          onSelect: () => console.log(row)
+          onClick: () => console.log(row)
         }),
         h(UButton, {
           label: t('actions.showReport'),
           variant: 'outline',
           color: 'secondary',
-          onSelect: () => console.log(row)
+          onClick: () => console.log(row)
         }),
         h(UButton, {
           label: t('actions.jira'),
           variant: 'outline',
           color: 'info',
-          onSelect: () => console.log(row)
+          onClick: () => console.log(row)
         })
       ])
     }
@@ -84,7 +84,7 @@ const columns: TableColumn<EnvironmentsTableRow>[] = [
 
 <template>
   <UiDashboardContent class="pb-24 h-full">
-    <UPageGrid class="h-full">
+    <UPageGrid id="project-envs" class="h-full">
       <UPageCard
         class="col-span-3 h-full overflow-auto"
         :ui="{ header: 'w-full mb-0', container: 'lg:flex', wrapper: 'flex-0' }"
@@ -94,7 +94,7 @@ const columns: TableColumn<EnvironmentsTableRow>[] = [
             <UInput
               :model-value="table?.tableApi?.getColumn('name')?.getFilterValue() as string"
               class="max-w-sm"
-              :placeholder="t('reports.filter')"
+              :placeholder="t('global.filter')"
               @update:model-value="table?.tableApi?.getColumn('name')?.setFilterValue($event)"
             />
           </div>

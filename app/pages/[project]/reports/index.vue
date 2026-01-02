@@ -169,13 +169,13 @@ const columns: TableColumn<ReportTableRow>[] = [
           label: t('actions.backup'),
           variant: 'outline',
           color: 'secondary',
-          onSelect: () => toggleBackupModal(row.original)
+          onClick: () => toggleBackupModal(row.original)
         }),
         h(UButton, {
           label: t('actions.delete'),
           variant: 'outline',
           color: 'error',
-          onSelect: () => toggleDeleteModal(row.original)
+          onClick: () => toggleDeleteModal(row.original)
         })
       ])
     }
@@ -185,7 +185,7 @@ const columns: TableColumn<ReportTableRow>[] = [
 
 <template>
   <UiDashboardContent class="pb-24 h-full">
-    <UPageGrid class="h-full">
+    <UPageGrid id="project-reports" class="h-full">
       <UPageCard
         class="col-span-3 h-full overflow-auto"
         :ui="{ header: 'w-full mb-0', container: 'lg:flex', wrapper: 'flex-0' }"
@@ -195,7 +195,7 @@ const columns: TableColumn<ReportTableRow>[] = [
             <UInput
               :model-value="table?.tableApi?.getColumn('name')?.getFilterValue() as string"
               class="max-w-sm"
-              :placeholder="t('reports.filter')"
+              :placeholder="t('global.filter')"
               @update:model-value="table?.tableApi?.getColumn('name')?.setFilterValue($event)"
             />
 

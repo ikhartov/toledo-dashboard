@@ -3,6 +3,7 @@ import type { PageCardProps } from '@nuxt/ui'
 interface UiPresets {
   pageCard: {
     dashboard: PageCardProps
+    space: PageCardProps
   }
 }
 
@@ -19,12 +20,14 @@ const icons = {
   chevronsUpDown: 'i-lucide-chevrons-up-down',
   controlPanel: 'i-lucide-sliders-vertical',
   image: 'i-lucide-image',
+  imagePlus: 'i-lucide-image-plus',
   logout: 'i-lucide-log-out',
   palette: 'i-lucide-palette',
   sunMoon: 'i-lucide-sun-moon',
   arrowNarrowUp: 'i-lucide-arrow-up-narrow-wide',
   arrowNarrowDown: 'i-lucide-arrow-down-wide-narrow',
   arrowUpDown: 'i-lucide-arrow-up-down',
+  hardDriveDownload: 'i-lucide-hard-drive-download',
   // default
   arrowDown: 'i-lucide-arrow-down',
   arrowLeft: 'i-lucide-arrow-left',
@@ -74,11 +77,25 @@ const presets: UiPresets = {
     dashboard: {
       variant: 'subtle',
       ui: {
-        container: 'gap-y-1.5 cont',
+        root: 'h-full',
+        container: 'gap-y-1.5',
         wrapper: 'flex-row gap-4 items-center',
         leading: 'm-0 p-2.5 rounded-full bg-primary/10 ring ring-inset ring-primary/25 flex-col',
         title: 'font-normal text-muted text-xs uppercase',
         description: 'mt-2 text-lg font-semibold text-default leading-none'
+      }
+    },
+    space: {
+      variant: 'subtle',
+      ui: {
+        root: 'h-full',
+        container: 'gap-y-1.5',
+        wrapper: 'flex-row flex-wrap gap-4 gap-y-1.5 items-center',
+        header: 'mb-0 order-1 font-normal text-muted text-xs uppercase',
+        leading: 'm-0 p-2.5 rounded-full bg-primary/10 ring ring-inset ring-primary/25 flex-col',
+        body: 'order-1 basis-full w-full ml-14 grid gap-1',
+        title: 'font-normal text-default leading-none',
+        description: 'mt-0 font-normal text-muted leading-none'
       }
     }
   }
