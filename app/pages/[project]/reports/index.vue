@@ -5,8 +5,11 @@ import type { Report } from '~~/shared/types'
 
 interface ReportTableRow {
   name: string
-  failed: number
-  passed: number
+  status: string
+  result: {
+    passed: number
+    failed: number
+  }
 }
 
 definePageMeta({
