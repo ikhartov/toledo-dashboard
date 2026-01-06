@@ -9,11 +9,9 @@ export default defineEventHandler(async (event) => {
       return { data: null, error: 'projectId is not defined' }
     }
 
-    const data = await $fetch(`/_${projectId}/api/app-list`)
-
-    return { data, error: null }
+    return await $fetch<string[]>(`/_${projectId}/api/app-list`)
   } catch (error) {
     throwError(error, 'GET_PROJECT_ENVS_ERROR')
-    return { data: null, error }
+    return []
   }
 })
