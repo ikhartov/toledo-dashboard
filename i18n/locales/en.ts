@@ -3,10 +3,10 @@ export default {
   actions: {
     backup: 'Backup',
     backupSelected: 'Backup reports',
+    cancel: 'Cancel',
     createReference: 'Create reference',
     delete: 'Delete',
     deleteSelected: 'Delete reports',
-    jira: 'Jira Ticket',
     open: 'Open',
     showReport: 'Show report',
     startSelectedTest: 'Start selected test',
@@ -64,6 +64,18 @@ export default {
     secondary: 'Secondary',
     theme: 'Theme'
   },
+  modal: {
+    backup: {
+      description:
+        'Are you sure you want to backup the report? | Are you sure you want to backup the selected reports?',
+      title: 'Backup report | Backup reports'
+    },
+    delete: {
+      description:
+        'Are you sure you want to delete the report? | Are you sure you want to delete the selected reports?',
+      title: 'Delete report | Delete reports'
+    }
+  },
   mode: {
     dark: 'Dark',
     light: 'Light',
@@ -72,7 +84,21 @@ export default {
   navigation: {
     envs: 'Environments',
     panel: 'Control panel',
+    references: 'References',
     reports: 'Reports'
+  },
+  notifications: {
+    references: {
+      start: 'Creation of references has started'
+    },
+    report: {
+      backup: 'Report has been backed up | Reports have been backed up',
+      delete: 'Report has been deleted | Reports have been deleted'
+    },
+    tests: {
+      start: 'Testing started',
+      startSelected: 'Testing of selected tests has started'
+    }
   },
   reports: {
     columns: {
