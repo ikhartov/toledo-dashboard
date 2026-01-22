@@ -174,6 +174,11 @@ export const useNavigationStore = defineStore('navigation', () => {
       to: localePath(`/${projectId}/envs`)
     },
     {
+      label: t('navigation.references'),
+      icon: ui.icons.image,
+      to: localePath(`/${projectId}/references`)
+    },
+    {
       label: t('navigation.reports'),
       icon: ui.icons.bookImage,
       to: localePath(`/${projectId}/reports`)
