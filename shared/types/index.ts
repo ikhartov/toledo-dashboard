@@ -30,9 +30,19 @@ export interface Report {
   }
 }
 
-export interface DiskSpace {
+export interface DiskSpaceUsage {
   testFolderSize: number
   referenceFolderSize: number
+}
+
+export interface DiskSpace {
+  capacity: number
+  folders: {
+    backups: number
+    references: number
+    reports: number
+  }
+  used: number
 }
 
 export interface Scenario {

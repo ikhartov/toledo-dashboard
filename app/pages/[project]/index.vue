@@ -11,6 +11,7 @@ definePageMeta({
   middleware: 'auth'
 })
 
+const UBadge = resolveComponent('UBadge')
 const UButton = resolveComponent('UButton')
 const UCheckbox = resolveComponent('UCheckbox')
 
@@ -137,6 +138,32 @@ function handleStartSelectedTests() {
   console.log('handleStartSelectedTests', selectedRows.value)
   showSuccessMessage(t('notifications.tests.startSelected'))
 }
+function getPercentOf(value: number, total: number) {
+  return (value / total) * 100
+}
+function getStatusBadge(value?: number) {
+  let color = 'neutral'
+
+  if (value && diskSpaceData.value?.capacity) {
+    const percent = getPercentOf(value, diskSpaceData.value.capacity)
+
+    if (percent > 0 && percent <= 49) {
+      color = 'info'
+    }
+
+    if (percent >= 50 && percent <= 74) {
+      color = 'warning'
+    }
+
+    if (percent >= 75) {
+      color = 'error'
+    }
+  }
+
+  return h(UBadge, { variant: 'subtle', color }, () => {
+    return t('controlPanel.diskUsage.description', { used: value })
+  })
+}
 </script>
 
 <template>
@@ -145,26 +172,36 @@ function handleStartSelectedTests() {
       id="control-panel"
       class="gap-2 lg:gap-4 grid-cols-1 lg:grid-cols-2 xl:grid-cols-2 2xl:grid-cols-3 items-start"
     >
-      <UPageCard
-        v-bind="ui.presets.pageCard.space"
-        :title="
-          t('controlPanel.diskUsage.description', {
-            label: t('controlPanel.diskUsage.test'),
-            total: '20000',
-            used: Number(diskSpaceData?.testFolderSize).toFixed(2)
-          })
-        "
-        :description="
-          t('controlPanel.diskUsage.description', {
-            label: t('controlPanel.diskUsage.reference'),
-            total: '1000',
-            used: Number(diskSpaceData?.referenceFolderSize).toFixed(2)
-          })
-        "
-        :icon="ui.icons.hardDriveDownload"
-      >
+      <UPageCard v-bind="ui.presets.pageCard.space" :icon="ui.icons.hardDriveDownload">
         <template #header>
           <span>{{ t('controlPanel.diskUsage.title') }}</span>
+        </template>
+        <template #body>
+          <div class="flex flex-wrap gap-2">
+            <div class="flex gap-1 text-base text-pretty">
+              <span class="font-medium">{{ t('controlPanel.diskUsage.capacity') }}</span>
+              <UBadge variant="subtle" color="neutral" :label="`${diskSpaceData?.capacity} mb`" />
+            </div>
+            <div class="flex gap-1 text-base text-pretty">
+              <span class="font-medium">{{ t('controlPanel.diskUsage.used') }}</span>
+              <component :is="getStatusBadge(diskSpaceData?.used)" />
+            </div>
+          </div>
+          <USeparator />
+          <div class="flex flex-wrap gap-2">
+            <div
+              v-for="(value, key) in diskSpaceData?.folders"
+              :key="key"
+              class="flex gap-1 items-center text-xs text-pretty"
+            >
+              <span>{{ t(`controlPanel.diskUsage.${key}`) }}</span>
+              <UBadge
+                variant="subtle"
+                color="secondary"
+                :label="t('controlPanel.diskUsage.description', { used: value })"
+              />
+            </div>
+          </div>
         </template>
       </UPageCard>
       <UPageCard

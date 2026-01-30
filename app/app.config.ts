@@ -78,7 +78,7 @@ const presets: UiPresets = {
       variant: 'subtle',
       ui: {
         root: 'h-full',
-        container: 'gap-y-1.5',
+        container: 'gap-y-1.5 lg:items-baseline',
         wrapper: 'flex-row gap-4 items-center',
         leading: 'm-0 p-2.5 rounded-full bg-primary/10 ring ring-inset ring-primary/25 flex-col',
         title: 'font-normal text-muted text-xs uppercase',
@@ -93,9 +93,7 @@ const presets: UiPresets = {
         wrapper: 'flex-row flex-wrap gap-4 gap-y-1.5 items-center',
         header: 'mb-0 order-1 font-normal text-muted text-xs uppercase',
         leading: 'm-0 p-2.5 rounded-full bg-primary/10 ring ring-inset ring-primary/25 flex-col',
-        body: 'order-1 basis-full w-full ml-14 grid gap-1',
-        title: 'font-normal text-default leading-none',
-        description: 'mt-0 font-normal text-muted leading-none'
+        body: 'order-1 basis-full w-full ml-14 grid gap-1'
       }
     }
   }
