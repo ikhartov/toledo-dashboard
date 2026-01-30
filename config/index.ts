@@ -7,19 +7,22 @@ export const PROJECTS_LIST: ProjectConfig[] = [
     id: 'bond',
     apiUrl: 'https://toledo-staging-bond-frontera.wlabel.site',
     label: 'Bond',
-    icon: 'i-lucide-bold'
+    icon: 'i-lucide-bold',
+    mockUrl: 'https://mock-bond.staging.wlabel.site'
   },
   {
     id: 'thor',
     apiUrl: 'https://toledo-staging-thor-frontera.wlabel.site',
     label: 'Thor',
-    icon: 'i-lucide-command'
+    icon: 'i-lucide-command',
+    mockUrl: 'https://mock-thor.staging.wlabel.site'
   },
   {
     id: 'vegas',
     apiUrl: 'https://toledo-staging-vegas-frontera.wlabel.site',
     label: 'Vegas',
-    icon: 'i-lucide-sunset'
+    icon: 'i-lucide-sunset',
+    mockUrl: 'https://mock-vegas.staging.wlabel.site'
   }
 ]
 

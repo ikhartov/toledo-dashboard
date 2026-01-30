@@ -20,6 +20,7 @@ export interface ProjectConfig {
   apiUrl: string
   label: string
   icon?: string
+  mockUrl?: string
 }
 
 export interface Report {
@@ -30,6 +31,7 @@ export interface Report {
   }
 }
 
+// TODO: refactor server response. should be type of DiskSpace
 export interface DiskSpaceUsage {
   testFolderSize: number
   referenceFolderSize: number
@@ -46,6 +48,6 @@ export interface DiskSpace {
 }
 
 export interface Scenario {
-  label: string
-  url: string
+  label?: string
+  url?: string
 }

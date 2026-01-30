@@ -5,6 +5,7 @@ import type { TableColumn } from '@nuxt/ui'
 
 interface ScenariosTableRow {
   label: string
+  url: string
 }
 
 definePageMeta({
@@ -13,12 +14,14 @@ definePageMeta({
 
 const UBadge = resolveComponent('UBadge')
 const UButton = resolveComponent('UButton')
+const ULink = resolveComponent('ULink')
 const UCheckbox = resolveComponent('UCheckbox')
 
 const { t } = useI18n()
 const { ui } = useAppConfig()
 const route = useRoute()
 const { showErrorMessage, showSuccessMessage } = useNotifications()
+const { projectsList } = storeToRefs(useConfigStore())
 
 const { data: diskSpaceData, error: diskSpaceError } = await useFetch<DiskSpace | null>(
   `/api/${route.params.project}/disk-space`
@@ -46,7 +49,8 @@ const sorting = ref([{ id: 'label', desc: false }])
 const isRowsSelected = computed(() => Object.keys(selectedRows.value).length)
 const items = computed(() => {
   return scenariosData.value.map((scenario) => ({
-    label: scenario.label
+    label: scenario.label,
+    url: scenario.url
   }))
 })
 
@@ -60,7 +64,9 @@ const columns: TableColumn<ScenariosTableRow>[] = [
           table.toggleAllPageRowsSelected(!!value)
           if (value) {
             scenariosData.value.forEach((item) => {
-              selectedRows.value[item.label] = !!value
+              if (item.label) {
+                selectedRows.value[item.label] = !!value
+              }
             })
           } else {
             if (Object.keys(selectedRows.value).length) {
@@ -105,7 +111,19 @@ const columns: TableColumn<ScenariosTableRow>[] = [
       })
     },
     cell: ({ row }) => {
-      return h('span', { class: 'font-semibold' }, row.getValue('label'))
+      const mockUrl = projectsList.value.find((project) => project.id === route.params.project)?.mockUrl
+      const url = row.original.url.charAt(0) === '/' ? row.original.url.slice(1) : row.original.url
+
+      return h(
+        ULink,
+        {
+          class: 'font-semibold',
+          href: `${mockUrl}/${url}`,
+          external: true,
+          target: '_blank'
+        },
+        () => row.getValue('label')
+      )
     }
   },
   {
