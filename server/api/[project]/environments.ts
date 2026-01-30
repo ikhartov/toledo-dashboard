@@ -1,13 +1,13 @@
 import type { Environment } from '~~/shared/types'
 import { throwError } from '~~/server/helpers/throwError'
 
-export default defineEventHandler(async (event): Promise<Environment[] | null> => {
+export default defineEventHandler(async (event): Promise<Environment[]> => {
   try {
     const projectId = getRouterParam(event, 'project')
 
     if (!projectId) {
       throwError('projectId is not defined', 'GET_PROJECT_ERROR')
-      return null
+      return []
     }
 
     // TODO: refactor server response. should be type of Environment
@@ -19,6 +19,6 @@ export default defineEventHandler(async (event): Promise<Environment[] | null> =
     }))
   } catch (error) {
     throwError(error, 'GET_PROJECT_ENVS_ERROR')
-    return null
+    return []
   }
 })

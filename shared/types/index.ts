@@ -44,7 +44,7 @@ export interface ProjectConfig {
 
 export interface Report {
   name: string
-  status: string
+  status?: 'failed' | 'passed' | 'pending'
   result: {
     passed: number
     failed: number

@@ -18,7 +18,7 @@ const { ui } = useAppConfig()
 const route = useRoute()
 const { showErrorMessage, showSuccessMessage } = useNotifications()
 
-const { data, error } = await useFetch<Report[]>(`/api/${route.params.project}/reports`, {
+const { data: items, error } = await useFetch<Report[]>(`/api/${route.params.project}/reports`, {
   default: () => []
 })
 
@@ -44,13 +44,6 @@ const rowSelection = ref({})
 const sorting = ref([{ id: 'name', desc: false }])
 
 const isRowsSelected = computed(() => Object.keys(selectedRows.value).length)
-const items = computed(() => {
-  return data.value.map((report) => ({
-    name: report.name,
-    status: report.result.failed ? 'failed' : report.result.passed ? 'passed' : 'pending',
-    result: { passed: report.result.passed, failed: report.result.failed }
-  }))
-})
 
 function toggleBackupModal(row?: Report) {
   console.log(row)
@@ -166,7 +159,7 @@ const columns: TableColumn<Report>[] = [
         'onUpdate:modelValue': (value: boolean | 'indeterminate') => {
           table.toggleAllPageRowsSelected(!!value)
           if (value) {
-            data.value.forEach((item) => {
+            items.value.forEach((item) => {
               selectedRows.value[item.name] = !!value
             })
           } else {
