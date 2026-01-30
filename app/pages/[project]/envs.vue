@@ -32,6 +32,17 @@ if (reportsError.value) {
   showErrorMessage(reportsError.value)
 }
 
+async function handleStartTest(row: Environment) {
+  try {
+    await $fetch(`/api/${route.params.project}/start`, {
+      query: { service: row.id }
+    })
+    showSuccessMessage(t('notifications.tests.start'), row.name)
+  } catch (error) {
+    showErrorMessage(error)
+  }
+}
+
 const table = useTemplateRef('table')
 const columnFilters = ref([{ id: 'name', value: '' }])
 const sorting = ref([{ id: 'name', desc: false }])
@@ -75,10 +86,7 @@ const columns: TableColumn<Environment>[] = [
           : undefined,
         h(UButton, {
           label: t('actions.startTest'),
-          onClick: () => {
-            console.log(row.original)
-            showSuccessMessage(t('notifications.tests.start'), row.original.name)
-          }
+          onClick: () => handleStartTest(row.original)
         })
       ])
     }

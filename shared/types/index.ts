@@ -24,7 +24,8 @@ export interface DiskSpaceUsage {
 }
 
 export interface Environment {
-  name: string
+  id: string
+  name?: string
   url?: string
 }
 

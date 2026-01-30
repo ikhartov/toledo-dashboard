@@ -46,24 +46,20 @@ const sorting = ref([{ id: 'name', desc: false }])
 const isRowsSelected = computed(() => Object.keys(selectedRows.value).length)
 
 function toggleBackupModal(row?: Report) {
-  console.log(row)
   modal.backup = !modal.backup
   backupModel.value = row
 }
 
 function toggleDeleteModal(row?: Report) {
-  console.log(row)
   modal.delete = !modal.delete
   deleteModel.value = row
 }
 
 function toggleBackupSelected() {
-  console.log('Backup selected rows', selectedRows.value)
   modal.bulkBackup = !modal.bulkBackup
 }
 
 function toggleDeleteSelected() {
-  console.log('Delete selected rows', selectedRows.value)
   modal.bulkDelete = !modal.bulkDelete
 }
 
@@ -94,31 +90,53 @@ function deleteReports() {
   }, DEFAULT_DELETE_TIMEOUT)
 }
 
-function backupReport() {
-  console.log('Backup report', backupModel.value)
+async function backupReport() {
+  try {
+    loading.value = true
 
-  loading.value = true
+    await $fetch(`/api/${route.params.project}/backup`, {
+      method: 'post',
+      body: backupModel.value?.name
+    })
 
-  setTimeout(() => {
+    setTimeout(() => {
+      loading.value = false
+      showSuccessMessage(t('notifications.report.backup', 1), backupModel.value?.name)
+      modal.backup = false
+      backupModel.value = undefined
+    }, DEFAULT_DELETE_TIMEOUT)
+  } catch (error) {
     loading.value = false
-    showSuccessMessage(t('notifications.report.backup', 1), backupModel.value?.name)
     modal.backup = false
     backupModel.value = undefined
-  }, DEFAULT_DELETE_TIMEOUT)
+    showErrorMessage(error)
+  }
 }
 
-function backupReports() {
-  console.log('Backup reports', selectedRows.value)
+async function backupReports() {
+  try {
+    loading.value = true
 
-  loading.value = true
+    await $fetch(`/api/${route.params.project}/backup`, {
+      method: 'post',
+      body: Object.entries(selectedRows.value)
+        .filter(([_, value]) => value)
+        .map(([key]) => key)
+    })
 
-  setTimeout(() => {
+    setTimeout(() => {
+      loading.value = false
+      table.value?.tableApi?.toggleAllPageRowsSelected(false)
+      showSuccessMessage(t('notifications.report.backup', 2))
+      modal.bulkBackup = false
+      selectedRows.value = {}
+    }, DEFAULT_DELETE_TIMEOUT)
+  } catch (error) {
     loading.value = false
-    table.value?.tableApi?.toggleAllPageRowsSelected(false)
-    showSuccessMessage(t('notifications.report.backup', 2))
     modal.bulkBackup = false
     selectedRows.value = {}
-  }, DEFAULT_DELETE_TIMEOUT)
+    showErrorMessage(error)
+  }
 }
 
 function getStatusBadge(status: string) {

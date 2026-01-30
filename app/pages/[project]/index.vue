@@ -129,9 +129,16 @@ const columns: TableColumn<Scenario>[] = [
           label: t('actions.startTest'),
           variant: 'outline',
           color: 'secondary',
-          onClick: () => {
-            console.log(row.original)
-            showSuccessMessage(t('notifications.tests.start'), row.original.label)
+          onClick: async () => {
+            try {
+              await $fetch(`/api/${route.params.project}/start`, {
+                method: 'post',
+                body: [row.original.label]
+              })
+              showSuccessMessage(t('notifications.tests.start'), row.original.label)
+            } catch (error) {
+              showErrorMessage(error)
+            }
           }
         })
       ])
@@ -139,17 +146,30 @@ const columns: TableColumn<Scenario>[] = [
   }
 ]
 
-function handleStartTest() {
-  console.log('handleStartTest')
-  showSuccessMessage(t('notifications.tests.start'))
+async function handleStartTest() {
+  try {
+    await $fetch(`/api/${route.params.project}/start`)
+    showSuccessMessage(t('notifications.tests.start'))
+  } catch (error) {
+    showErrorMessage(error)
+  }
 }
 function handleCreateReferences() {
   console.log('handleCreateReferences')
   showSuccessMessage(t('notifications.references.start'))
 }
-function handleStartSelectedTests() {
-  console.log('handleStartSelectedTests', selectedRows.value)
-  showSuccessMessage(t('notifications.tests.startSelected'))
+async function handleStartSelectedTests() {
+  try {
+    await $fetch(`/api/${route.params.project}/start`, {
+      method: 'post',
+      body: Object.entries(selectedRows.value)
+        .filter(([_, value]) => value)
+        .map(([key]) => key)
+    })
+    showSuccessMessage(t('notifications.tests.startSelected'))
+  } catch (error) {
+    showErrorMessage(error)
+  }
 }
 function getPercentOf(value: number, total: number) {
   return (value / total) * 100

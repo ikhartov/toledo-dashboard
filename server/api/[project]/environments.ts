@@ -14,7 +14,8 @@ export default defineEventHandler(async (event): Promise<Environment[]> => {
     const response = await $fetch<string[]>(`/_${projectId}/api/app-list`)
 
     return response.map((env) => ({
-      name: env,
+      id: env,
+      name: env.replace(/-mock$/g, ''),
       url: undefined
     }))
   } catch (error) {
