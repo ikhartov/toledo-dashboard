@@ -4,15 +4,6 @@ import type { TableColumn } from '@nuxt/ui'
 import type { Report } from '~~/shared/types'
 import { DEFAULT_DELETE_TIMEOUT } from '~~/shared/constants'
 
-interface ReportTableRow {
-  name: string
-  status: string
-  result: {
-    passed: number
-    failed: number
-  }
-}
-
 definePageMeta({
   middleware: 'auth',
   breadcrumb: 'reports'
@@ -36,8 +27,8 @@ if (error.value) {
 }
 
 const loading = ref(false)
-const backupModel = ref<ReportTableRow>()
-const deleteModel = ref<ReportTableRow>()
+const backupModel = ref<Report>()
+const deleteModel = ref<Report>()
 const modal = reactive({
   backup: false,
   bulkBackup: false,
@@ -61,13 +52,13 @@ const items = computed(() => {
   }))
 })
 
-function toggleBackupModal(row?: ReportTableRow) {
+function toggleBackupModal(row?: Report) {
   console.log(row)
   modal.backup = !modal.backup
   backupModel.value = row
 }
 
-function toggleDeleteModal(row?: ReportTableRow) {
+function toggleDeleteModal(row?: Report) {
   console.log(row)
   modal.delete = !modal.delete
   deleteModel.value = row
@@ -149,7 +140,7 @@ function getStatusBadge(status: string) {
   })
 }
 
-function getResultContent(result: ReportTableRow['result']) {
+function getResultContent(result: Report['result']) {
   const colorMap = {
     passed: 'text-success',
     failed: 'text-error'
@@ -166,7 +157,7 @@ function getResultContent(result: ReportTableRow['result']) {
   return h('div', { class: 'flex gap-4 sm:flex-col sm:gap-1' }, content)
 }
 
-const columns: TableColumn<ReportTableRow>[] = [
+const columns: TableColumn<Report>[] = [
   {
     id: 'select',
     header: ({ table }) =>
@@ -317,7 +308,7 @@ const columns: TableColumn<ReportTableRow>[] = [
               <span class="w-1/5">{{ key }}:&nbsp;</span>
               <component :is="getStatusBadge(value as string)" v-if="key === 'status'" />
               <component
-                :is="getResultContent(value as ReportTableRow['result'])"
+                :is="getResultContent(value as Report['result'])"
                 v-else-if="key === 'result'"
                 class="text-sm sm:flex-row sm:gap-2"
               />
@@ -369,7 +360,7 @@ const columns: TableColumn<ReportTableRow>[] = [
               <span class="w-1/5">{{ key }}:&nbsp;</span>
               <component :is="getStatusBadge(value as string)" v-if="key === 'status'" />
               <component
-                :is="getResultContent(value as ReportTableRow['result'])"
+                :is="getResultContent(value as Report['result'])"
                 v-else-if="key === 'result'"
                 class="text-sm sm:flex-row sm:gap-2"
               />

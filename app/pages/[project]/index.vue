@@ -3,11 +3,6 @@ import { h, resolveComponent } from 'vue'
 import type { DiskSpace, Scenario } from '~~/shared/types'
 import type { TableColumn } from '@nuxt/ui'
 
-interface ScenariosTableRow {
-  label: string
-  url: string
-}
-
 definePageMeta({
   middleware: 'auth'
 })
@@ -54,7 +49,7 @@ const items = computed(() => {
   }))
 })
 
-const columns: TableColumn<ScenariosTableRow>[] = [
+const columns: TableColumn<Scenario>[] = [
   {
     id: 'select',
     header: ({ table }) =>
@@ -83,9 +78,9 @@ const columns: TableColumn<ScenariosTableRow>[] = [
         'modelValue': row.getIsSelected(),
         'onUpdate:modelValue': (value: boolean | 'indeterminate') => {
           row.toggleSelected(!!value)
-          if (value) {
+          if (value && row.original.label) {
             selectedRows.value[row.original.label] = !!value
-          } else if (selectedRows.value[row.original.label]) {
+          } else if (row.original.label && selectedRows.value[row.original.label]) {
             // eslint-disable-next-line @typescript-eslint/no-dynamic-delete
             delete selectedRows.value[row.original.label]
           }
@@ -112,7 +107,7 @@ const columns: TableColumn<ScenariosTableRow>[] = [
     },
     cell: ({ row }) => {
       const mockUrl = projectsList.value.find((project) => project.id === route.params.project)?.mockUrl
-      const url = row.original.url.charAt(0) === '/' ? row.original.url.slice(1) : row.original.url
+      const url = row.original.url?.charAt(0) === '/' ? row.original.url.slice(1) : row.original.url
 
       return h(
         ULink,

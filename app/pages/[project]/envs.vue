@@ -1,11 +1,7 @@
 <script setup lang="ts">
 import { h, resolveComponent } from 'vue'
 import type { TableColumn } from '@nuxt/ui'
-import type { Report } from '#shared/types'
-
-interface EnvironmentsTableRow {
-  name: string
-}
+import type { Environment, Report } from '~~/shared/types'
 
 definePageMeta({
   middleware: 'auth',
@@ -13,13 +9,14 @@ definePageMeta({
 })
 
 const UButton = resolveComponent('UButton')
+const ULink = resolveComponent('ULink')
 
 const { t } = useI18n()
 const { ui } = useAppConfig()
 const route = useRoute()
 const { showErrorMessage, showSuccessMessage } = useNotifications()
 
-const { data, error } = await useFetch<string[]>(`/api/${route.params.project}/environments`, {
+const { data: items, error } = await useFetch<Environment[]>(`/api/${route.params.project}/environments`, {
   default: () => []
 })
 
@@ -39,10 +36,7 @@ const table = useTemplateRef('table')
 const columnFilters = ref([{ id: 'name', value: '' }])
 const sorting = ref([{ id: 'name', desc: false }])
 
-const items = computed(() => {
-  return data.value?.map((env) => ({ name: env }))
-})
-const columns: TableColumn<EnvironmentsTableRow>[] = [
+const columns: TableColumn<Environment>[] = [
   {
     accessorKey: 'name',
     header: ({ column }) => {
@@ -62,14 +56,16 @@ const columns: TableColumn<EnvironmentsTableRow>[] = [
       })
     },
     cell: ({ row }) => {
-      return h('span', { class: 'font-semibold' }, row.getValue('name'))
+      return h(ULink, { class: 'font-semibold', external: true, target: '_blank', href: row.original.url }, () =>
+        row.getValue('name')
+      )
     }
   },
   {
     id: 'actions',
     cell: ({ row }) => {
       return h('div', { class: 'flex flex-wrap gap-4 lg:gap-6 justify-between sm:justify-end' }, [
-        reports.value.find((report) => row.original.name.includes(report.name))
+        reports.value.find((report) => row.original.name?.includes(report.name))
           ? h(UButton, {
               label: t('actions.showReport'),
               variant: 'outline',

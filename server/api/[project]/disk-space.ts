@@ -11,6 +11,7 @@ export default defineEventHandler(async (event): Promise<DiskSpace | null> => {
       return null
     }
 
+    // TODO: refactor server response. should be type of DiskSpace
     const { testFolderSize, referenceFolderSize } = await $fetch<DiskSpaceUsage>(`/_${projectId}/api/spase-usage`)
 
     return {

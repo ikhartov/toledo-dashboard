@@ -2,11 +2,30 @@ import type { H3Error } from 'h3'
 
 export type ServerError = Partial<H3Error>
 
-// ui
 export type Locale = 'en'
 
 export type Observer<T> = {
   [key: number | string]: T
+}
+
+export interface DiskSpace {
+  capacity: number
+  folders: {
+    backups: number
+    references: number
+    reports: number
+  }
+  used: number
+}
+
+export interface DiskSpaceUsage {
+  testFolderSize: number
+  referenceFolderSize: number
+}
+
+export interface Environment {
+  name: string
+  url?: string
 }
 
 export interface ObservableObj {
@@ -25,26 +44,11 @@ export interface ProjectConfig {
 
 export interface Report {
   name: string
+  status: string
   result: {
     passed: number
     failed: number
   }
-}
-
-// TODO: refactor server response. should be type of DiskSpace
-export interface DiskSpaceUsage {
-  testFolderSize: number
-  referenceFolderSize: number
-}
-
-export interface DiskSpace {
-  capacity: number
-  folders: {
-    backups: number
-    references: number
-    reports: number
-  }
-  used: number
 }
 
 export interface Scenario {
