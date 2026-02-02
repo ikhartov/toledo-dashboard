@@ -63,31 +63,51 @@ function toggleDeleteSelected() {
   modal.bulkDelete = !modal.bulkDelete
 }
 
-function deleteReport() {
-  console.log('Delete report', deleteModel.value)
+async function deleteReport() {
+  try {
+    loading.value = true
 
-  loading.value = true
+    await $fetch(`/api/${route.params.project}/delete`, {
+      method: 'post',
+      body: deleteModel.value?.name
+    })
 
-  setTimeout(() => {
+    setTimeout(() => {
+      loading.value = false
+      showSuccessMessage(t('notifications.report.delete', 1), deleteModel.value?.name)
+      toggleDeleteModal()
+    }, DEFAULT_DELETE_TIMEOUT)
+  } catch (error) {
     loading.value = false
-    showSuccessMessage(t('notifications.report.delete', 1), deleteModel.value?.name)
-    modal.delete = false
-    deleteModel.value = undefined
-  }, DEFAULT_DELETE_TIMEOUT)
+    toggleDeleteModal()
+    showErrorMessage(error)
+  }
 }
 
-function deleteReports() {
-  console.log('Delete reports', selectedRows.value)
+async function deleteReports() {
+  try {
+    loading.value = true
 
-  loading.value = true
+    await $fetch(`/api/${route.params.project}/delete`, {
+      method: 'post',
+      body: Object.entries(selectedRows.value)
+        .filter(([_, value]) => value)
+        .map(([key]) => key)
+    })
 
-  setTimeout(() => {
+    setTimeout(() => {
+      loading.value = false
+      table.value?.tableApi?.toggleAllPageRowsSelected(false)
+      showSuccessMessage(t('notifications.report.delete', 2))
+      modal.bulkDelete = false
+      selectedRows.value = {}
+    }, DEFAULT_DELETE_TIMEOUT)
+  } catch (error) {
     loading.value = false
-    table.value?.tableApi?.toggleAllPageRowsSelected(false)
-    showSuccessMessage(t('notifications.report.delete', 2))
     modal.bulkDelete = false
     selectedRows.value = {}
-  }, DEFAULT_DELETE_TIMEOUT)
+    showErrorMessage(error)
+  }
 }
 
 async function backupReport() {
@@ -102,13 +122,11 @@ async function backupReport() {
     setTimeout(() => {
       loading.value = false
       showSuccessMessage(t('notifications.report.backup', 1), backupModel.value?.name)
-      modal.backup = false
-      backupModel.value = undefined
+      toggleBackupModal()
     }, DEFAULT_DELETE_TIMEOUT)
   } catch (error) {
     loading.value = false
-    modal.backup = false
-    backupModel.value = undefined
+    toggleBackupModal()
     showErrorMessage(error)
   }
 }

@@ -154,9 +154,13 @@ async function handleStartTest() {
     showErrorMessage(error)
   }
 }
-function handleCreateReferences() {
-  console.log('handleCreateReferences')
-  showSuccessMessage(t('notifications.references.start'))
+async function handleCreateReferences() {
+  try {
+    await $fetch(`/api/${route.params.project}/create-references`)
+    showSuccessMessage(t('notifications.references.start'))
+  } catch (error) {
+    showErrorMessage(error)
+  }
 }
 async function handleStartSelectedTests() {
   try {
