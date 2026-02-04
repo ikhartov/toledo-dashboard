@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { h, resolveComponent } from 'vue'
 import type { TableColumn } from '@nuxt/ui'
+import type { Report } from '#shared/types'
 
 interface EnvironmentsTableRow {
   name: string
@@ -16,14 +17,22 @@ const UButton = resolveComponent('UButton')
 const { t } = useI18n()
 const { ui } = useAppConfig()
 const route = useRoute()
-const { showErrorMessage } = useNotifications()
+const { showErrorMessage, showSuccessMessage } = useNotifications()
 
 const { data, error } = await useFetch<string[]>(`/api/${route.params.project}/environments`, {
   default: () => []
 })
 
+const { data: reports, error: reportsError } = await useFetch<Report[]>(`/api/${route.params.project}/reports`, {
+  default: () => []
+})
+
 if (error.value) {
   showErrorMessage(error.value)
+}
+
+if (reportsError.value) {
+  showErrorMessage(reportsError.value)
 }
 
 const table = useTemplateRef('table')
@@ -59,22 +68,21 @@ const columns: TableColumn<EnvironmentsTableRow>[] = [
   {
     id: 'actions',
     cell: ({ row }) => {
-      return h('div', { class: 'flex flex-wrap gap-4 lg:gap-8 justify-between sm:justify-end' }, [
+      return h('div', { class: 'flex flex-wrap gap-4 lg:gap-6 justify-between sm:justify-end' }, [
+        reports.value.find((report) => row.original.name.includes(report.name))
+          ? h(UButton, {
+              label: t('actions.showReport'),
+              variant: 'outline',
+              color: 'secondary',
+              to: `/${route.params.project}/reports/${row.original.name}`
+            })
+          : undefined,
         h(UButton, {
           label: t('actions.startTest'),
-          onClick: () => console.log(row)
-        }),
-        h(UButton, {
-          label: t('actions.showReport'),
-          variant: 'outline',
-          color: 'secondary',
-          onClick: () => console.log(row)
-        }),
-        h(UButton, {
-          label: t('actions.jira'),
-          variant: 'outline',
-          color: 'info',
-          onClick: () => console.log(row)
+          onClick: () => {
+            console.log(row.original)
+            showSuccessMessage(t('notifications.tests.start'), row.original.name)
+          }
         })
       ])
     }

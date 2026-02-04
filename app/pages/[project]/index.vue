@@ -17,7 +17,7 @@ const UCheckbox = resolveComponent('UCheckbox')
 const { t } = useI18n()
 const { ui } = useAppConfig()
 const route = useRoute()
-const { showErrorMessage } = useNotifications()
+const { showErrorMessage, showSuccessMessage } = useNotifications()
 
 const { data: diskSpaceData, error: diskSpaceError } = await useFetch<DiskSpace | null>(
   `/api/${route.params.project}/disk-space`
@@ -35,15 +35,14 @@ if (scenariosError.value) {
   showErrorMessage(diskSpaceError.value)
 }
 
-const bulkDelete = ref<Record<string, boolean | undefined>>({})
+const selectedRows = ref<Record<string, boolean | undefined>>({})
 
 const table = useTemplateRef('table')
 const columnFilters = ref([{ id: 'label', value: '' }])
 const rowSelection = ref({})
 const sorting = ref([{ id: 'label', desc: false }])
 
-const isRowsSelected = computed(() => Object.keys(bulkDelete.value).length)
-
+const isRowsSelected = computed(() => Object.keys(selectedRows.value).length)
 const items = computed(() => {
   return scenariosData.value.map((scenario) => ({
     label: scenario.label
@@ -60,13 +59,13 @@ const columns: TableColumn<ScenariosTableRow>[] = [
           table.toggleAllPageRowsSelected(!!value)
           if (value) {
             scenariosData.value.forEach((item) => {
-              bulkDelete.value[item.label] = !!value
+              selectedRows.value[item.label] = !!value
             })
           } else {
-            if (Object.keys(bulkDelete.value).length) {
-              for (const key in bulkDelete.value) {
+            if (Object.keys(selectedRows.value).length) {
+              for (const key in selectedRows.value) {
                 // eslint-disable-next-line @typescript-eslint/no-dynamic-delete
-                delete bulkDelete.value[key]
+                delete selectedRows.value[key]
               }
             }
           }
@@ -78,10 +77,10 @@ const columns: TableColumn<ScenariosTableRow>[] = [
         'onUpdate:modelValue': (value: boolean | 'indeterminate') => {
           row.toggleSelected(!!value)
           if (value) {
-            bulkDelete.value[row.original.label] = !!value
-          } else if (bulkDelete.value[row.original.label]) {
+            selectedRows.value[row.original.label] = !!value
+          } else if (selectedRows.value[row.original.label]) {
             // eslint-disable-next-line @typescript-eslint/no-dynamic-delete
-            delete bulkDelete.value[row.original.label]
+            delete selectedRows.value[row.original.label]
           }
         }
       })
@@ -116,12 +115,28 @@ const columns: TableColumn<ScenariosTableRow>[] = [
           label: t('actions.startTest'),
           variant: 'outline',
           color: 'secondary',
-          onClick: () => console.log(row.original)
+          onClick: () => {
+            console.log(row.original)
+            showSuccessMessage(t('notifications.tests.start'), row.original.label)
+          }
         })
       ])
     }
   }
 ]
+
+function handleStartTest() {
+  console.log('handleStartTest')
+  showSuccessMessage(t('notifications.tests.start'))
+}
+function handleCreateReferences() {
+  console.log('handleCreateReferences')
+  showSuccessMessage(t('notifications.references.start'))
+}
+function handleStartSelectedTests() {
+  console.log('handleStartSelectedTests', selectedRows.value)
+  showSuccessMessage(t('notifications.tests.startSelected'))
+}
 </script>
 
 <template>
@@ -158,8 +173,8 @@ const columns: TableColumn<ScenariosTableRow>[] = [
         :icon="ui.icons.image"
       >
         <div class="ml-14 flex flex-wrap gap-4 gap-y-2">
-          <UButton :label="t('actions.createReference')" />
-          <UButton :label="t('controlPanel.reference.page')" />
+          <UButton :label="t('actions.createReference')" @click="handleCreateReferences" />
+          <UButton :label="t('controlPanel.reference.page')" :to="`/${route.params.project}/references`" />
         </div>
       </UPageCard>
       <UPageCard
@@ -168,7 +183,7 @@ const columns: TableColumn<ScenariosTableRow>[] = [
         :icon="ui.icons.imagePlus"
       >
         <div class="ml-14 flex flex-wrap gap-4 gap-y-2">
-          <UButton :label="t('actions.startTest')" />
+          <UButton :label="t('actions.startTest')" @click="handleStartTest" />
         </div>
       </UPageCard>
     </UPageGrid>
@@ -187,7 +202,9 @@ const columns: TableColumn<ScenariosTableRow>[] = [
             />
 
             <div v-if="isRowsSelected" class="flex gap-2">
-              <UButton color="secondary" variant="outline">{{ t('actions.startSelectedTest') }}</UButton>
+              <UButton color="secondary" variant="outline" @click="handleStartSelectedTests">
+                {{ t('actions.startSelectedTest') }}
+              </UButton>
             </div>
           </div>
         </template>
