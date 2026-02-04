@@ -3,21 +3,20 @@ import { h, resolveComponent } from 'vue'
 import type { DiskSpace, Scenario } from '~~/shared/types'
 import type { TableColumn } from '@nuxt/ui'
 
-interface ScenariosTableRow {
-  label: string
-}
-
 definePageMeta({
   middleware: 'auth'
 })
 
+const UBadge = resolveComponent('UBadge')
 const UButton = resolveComponent('UButton')
+const ULink = resolveComponent('ULink')
 const UCheckbox = resolveComponent('UCheckbox')
 
 const { t } = useI18n()
 const { ui } = useAppConfig()
 const route = useRoute()
 const { showErrorMessage, showSuccessMessage } = useNotifications()
+const { projectsList } = storeToRefs(useConfigStore())
 
 const { data: diskSpaceData, error: diskSpaceError } = await useFetch<DiskSpace | null>(
   `/api/${route.params.project}/disk-space`
@@ -45,11 +44,12 @@ const sorting = ref([{ id: 'label', desc: false }])
 const isRowsSelected = computed(() => Object.keys(selectedRows.value).length)
 const items = computed(() => {
   return scenariosData.value.map((scenario) => ({
-    label: scenario.label
+    label: scenario.label,
+    url: scenario.url
   }))
 })
 
-const columns: TableColumn<ScenariosTableRow>[] = [
+const columns: TableColumn<Scenario>[] = [
   {
     id: 'select',
     header: ({ table }) =>
@@ -59,7 +59,9 @@ const columns: TableColumn<ScenariosTableRow>[] = [
           table.toggleAllPageRowsSelected(!!value)
           if (value) {
             scenariosData.value.forEach((item) => {
-              selectedRows.value[item.label] = !!value
+              if (item.label) {
+                selectedRows.value[item.label] = !!value
+              }
             })
           } else {
             if (Object.keys(selectedRows.value).length) {
@@ -76,9 +78,9 @@ const columns: TableColumn<ScenariosTableRow>[] = [
         'modelValue': row.getIsSelected(),
         'onUpdate:modelValue': (value: boolean | 'indeterminate') => {
           row.toggleSelected(!!value)
-          if (value) {
+          if (value && row.original.label) {
             selectedRows.value[row.original.label] = !!value
-          } else if (selectedRows.value[row.original.label]) {
+          } else if (row.original.label && selectedRows.value[row.original.label]) {
             // eslint-disable-next-line @typescript-eslint/no-dynamic-delete
             delete selectedRows.value[row.original.label]
           }
@@ -104,7 +106,19 @@ const columns: TableColumn<ScenariosTableRow>[] = [
       })
     },
     cell: ({ row }) => {
-      return h('span', { class: 'font-semibold' }, row.getValue('label'))
+      const mockUrl = projectsList.value.find((project) => project.id === route.params.project)?.mockUrl
+      const url = row.original.url?.charAt(0) === '/' ? row.original.url.slice(1) : row.original.url
+
+      return h(
+        ULink,
+        {
+          class: 'font-semibold',
+          href: `${mockUrl}/${url}`,
+          external: true,
+          target: '_blank'
+        },
+        () => row.getValue('label')
+      )
     }
   },
   {
@@ -115,9 +129,16 @@ const columns: TableColumn<ScenariosTableRow>[] = [
           label: t('actions.startTest'),
           variant: 'outline',
           color: 'secondary',
-          onClick: () => {
-            console.log(row.original)
-            showSuccessMessage(t('notifications.tests.start'), row.original.label)
+          onClick: async () => {
+            try {
+              await $fetch(`/api/${route.params.project}/start`, {
+                method: 'post',
+                body: [row.original.label]
+              })
+              showSuccessMessage(t('notifications.tests.start'), row.original.label)
+            } catch (error) {
+              showErrorMessage(error)
+            }
           }
         })
       ])
@@ -125,17 +146,60 @@ const columns: TableColumn<ScenariosTableRow>[] = [
   }
 ]
 
-function handleStartTest() {
-  console.log('handleStartTest')
-  showSuccessMessage(t('notifications.tests.start'))
+async function handleStartTest() {
+  try {
+    await $fetch(`/api/${route.params.project}/start`)
+    showSuccessMessage(t('notifications.tests.start'))
+  } catch (error) {
+    showErrorMessage(error)
+  }
 }
-function handleCreateReferences() {
-  console.log('handleCreateReferences')
-  showSuccessMessage(t('notifications.references.start'))
+async function handleCreateReferences() {
+  try {
+    await $fetch(`/api/${route.params.project}/create-references`)
+    showSuccessMessage(t('notifications.references.start'))
+  } catch (error) {
+    showErrorMessage(error)
+  }
 }
-function handleStartSelectedTests() {
-  console.log('handleStartSelectedTests', selectedRows.value)
-  showSuccessMessage(t('notifications.tests.startSelected'))
+async function handleStartSelectedTests() {
+  try {
+    await $fetch(`/api/${route.params.project}/start`, {
+      method: 'post',
+      body: Object.entries(selectedRows.value)
+        .filter(([_, value]) => value)
+        .map(([key]) => key)
+    })
+    showSuccessMessage(t('notifications.tests.startSelected'))
+  } catch (error) {
+    showErrorMessage(error)
+  }
+}
+function getPercentOf(value: number, total: number) {
+  return (value / total) * 100
+}
+function getStatusBadge(value?: number) {
+  let color = 'neutral'
+
+  if (value && diskSpaceData.value?.capacity) {
+    const percent = getPercentOf(value, diskSpaceData.value.capacity)
+
+    if (percent > 0 && percent <= 49) {
+      color = 'info'
+    }
+
+    if (percent >= 50 && percent <= 74) {
+      color = 'warning'
+    }
+
+    if (percent >= 75) {
+      color = 'error'
+    }
+  }
+
+  return h(UBadge, { variant: 'subtle', color }, () => {
+    return t('controlPanel.diskUsage.description', { used: value })
+  })
 }
 </script>
 
@@ -145,26 +209,36 @@ function handleStartSelectedTests() {
       id="control-panel"
       class="gap-2 lg:gap-4 grid-cols-1 lg:grid-cols-2 xl:grid-cols-2 2xl:grid-cols-3 items-start"
     >
-      <UPageCard
-        v-bind="ui.presets.pageCard.space"
-        :title="
-          t('controlPanel.diskUsage.description', {
-            label: t('controlPanel.diskUsage.test'),
-            total: '20000',
-            used: Number(diskSpaceData?.testFolderSize).toFixed(2)
-          })
-        "
-        :description="
-          t('controlPanel.diskUsage.description', {
-            label: t('controlPanel.diskUsage.reference'),
-            total: '1000',
-            used: Number(diskSpaceData?.referenceFolderSize).toFixed(2)
-          })
-        "
-        :icon="ui.icons.hardDriveDownload"
-      >
+      <UPageCard v-bind="ui.presets.pageCard.space" :icon="ui.icons.hardDriveDownload">
         <template #header>
           <span>{{ t('controlPanel.diskUsage.title') }}</span>
+        </template>
+        <template #body>
+          <div class="flex flex-wrap gap-2">
+            <div class="flex gap-1 text-base text-pretty">
+              <span class="font-medium">{{ t('controlPanel.diskUsage.capacity') }}</span>
+              <UBadge variant="subtle" color="neutral" :label="`${diskSpaceData?.capacity} mb`" />
+            </div>
+            <div class="flex gap-1 text-base text-pretty">
+              <span class="font-medium">{{ t('controlPanel.diskUsage.used') }}</span>
+              <component :is="getStatusBadge(diskSpaceData?.used)" />
+            </div>
+          </div>
+          <USeparator />
+          <div class="flex flex-wrap gap-2">
+            <div
+              v-for="(value, key) in diskSpaceData?.folders"
+              :key="key"
+              class="flex gap-1 items-center text-xs text-pretty"
+            >
+              <span>{{ t(`controlPanel.diskUsage.${key}`) }}</span>
+              <UBadge
+                variant="subtle"
+                color="secondary"
+                :label="t('controlPanel.diskUsage.description', { used: value })"
+              />
+            </div>
+          </div>
         </template>
       </UPageCard>
       <UPageCard

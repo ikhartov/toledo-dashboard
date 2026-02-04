@@ -7,7 +7,7 @@ export default defineEventHandler(async (event) => {
 
     if (!projectId) {
       throwError('projectId is not defined', 'GET_PROJECT_ERROR')
-      return { data: null, error: 'projectId is not defined' }
+      return []
     }
 
     return await $fetch<Scenario[]>(`/_${projectId}/api/test-scenarios`)

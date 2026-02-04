@@ -4,15 +4,6 @@ import type { TableColumn } from '@nuxt/ui'
 import type { Report } from '~~/shared/types'
 import { DEFAULT_DELETE_TIMEOUT } from '~~/shared/constants'
 
-interface ReportTableRow {
-  name: string
-  status: string
-  result: {
-    passed: number
-    failed: number
-  }
-}
-
 definePageMeta({
   middleware: 'auth',
   breadcrumb: 'reports'
@@ -27,7 +18,7 @@ const { ui } = useAppConfig()
 const route = useRoute()
 const { showErrorMessage, showSuccessMessage } = useNotifications()
 
-const { data, error } = await useFetch<Report[]>(`/api/${route.params.project}/reports`, {
+const { data: items, error } = await useFetch<Report[]>(`/api/${route.params.project}/reports`, {
   default: () => []
 })
 
@@ -36,8 +27,8 @@ if (error.value) {
 }
 
 const loading = ref(false)
-const backupModel = ref<ReportTableRow>()
-const deleteModel = ref<ReportTableRow>()
+const backupModel = ref<Report>()
+const deleteModel = ref<Report>()
 const modal = reactive({
   backup: false,
   bulkBackup: false,
@@ -53,88 +44,117 @@ const rowSelection = ref({})
 const sorting = ref([{ id: 'name', desc: false }])
 
 const isRowsSelected = computed(() => Object.keys(selectedRows.value).length)
-const items = computed(() => {
-  return data.value.map((report) => ({
-    name: report.name,
-    status: report.result.failed ? 'failed' : report.result.passed ? 'passed' : 'pending',
-    result: { passed: report.result.passed, failed: report.result.failed }
-  }))
-})
 
-function toggleBackupModal(row?: ReportTableRow) {
-  console.log(row)
+function toggleBackupModal(row?: Report) {
   modal.backup = !modal.backup
   backupModel.value = row
 }
 
-function toggleDeleteModal(row?: ReportTableRow) {
-  console.log(row)
+function toggleDeleteModal(row?: Report) {
   modal.delete = !modal.delete
   deleteModel.value = row
 }
 
 function toggleBackupSelected() {
-  console.log('Backup selected rows', selectedRows.value)
   modal.bulkBackup = !modal.bulkBackup
 }
 
 function toggleDeleteSelected() {
-  console.log('Delete selected rows', selectedRows.value)
   modal.bulkDelete = !modal.bulkDelete
 }
 
-function deleteReport() {
-  console.log('Delete report', deleteModel.value)
+async function deleteReport() {
+  try {
+    loading.value = true
 
-  loading.value = true
+    await $fetch(`/api/${route.params.project}/delete`, {
+      method: 'post',
+      body: deleteModel.value?.name
+    })
 
-  setTimeout(() => {
+    setTimeout(() => {
+      loading.value = false
+      showSuccessMessage(t('notifications.report.delete', 1), deleteModel.value?.name)
+      toggleDeleteModal()
+    }, DEFAULT_DELETE_TIMEOUT)
+  } catch (error) {
     loading.value = false
-    showSuccessMessage(t('notifications.report.delete', 1), deleteModel.value?.name)
-    modal.delete = false
-    deleteModel.value = undefined
-  }, DEFAULT_DELETE_TIMEOUT)
+    toggleDeleteModal()
+    showErrorMessage(error)
+  }
 }
 
-function deleteReports() {
-  console.log('Delete reports', selectedRows.value)
+async function deleteReports() {
+  try {
+    loading.value = true
 
-  loading.value = true
+    await $fetch(`/api/${route.params.project}/delete`, {
+      method: 'post',
+      body: Object.entries(selectedRows.value)
+        .filter(([_, value]) => value)
+        .map(([key]) => key)
+    })
 
-  setTimeout(() => {
+    setTimeout(() => {
+      loading.value = false
+      table.value?.tableApi?.toggleAllPageRowsSelected(false)
+      showSuccessMessage(t('notifications.report.delete', 2))
+      modal.bulkDelete = false
+      selectedRows.value = {}
+    }, DEFAULT_DELETE_TIMEOUT)
+  } catch (error) {
     loading.value = false
-    table.value?.tableApi?.toggleAllPageRowsSelected(false)
-    showSuccessMessage(t('notifications.report.delete', 2))
     modal.bulkDelete = false
     selectedRows.value = {}
-  }, DEFAULT_DELETE_TIMEOUT)
+    showErrorMessage(error)
+  }
 }
 
-function backupReport() {
-  console.log('Backup report', backupModel.value)
+async function backupReport() {
+  try {
+    loading.value = true
 
-  loading.value = true
+    await $fetch(`/api/${route.params.project}/backup`, {
+      method: 'post',
+      body: backupModel.value?.name
+    })
 
-  setTimeout(() => {
+    setTimeout(() => {
+      loading.value = false
+      showSuccessMessage(t('notifications.report.backup', 1), backupModel.value?.name)
+      toggleBackupModal()
+    }, DEFAULT_DELETE_TIMEOUT)
+  } catch (error) {
     loading.value = false
-    showSuccessMessage(t('notifications.report.backup', 1), backupModel.value?.name)
-    modal.backup = false
-    backupModel.value = undefined
-  }, DEFAULT_DELETE_TIMEOUT)
+    toggleBackupModal()
+    showErrorMessage(error)
+  }
 }
 
-function backupReports() {
-  console.log('Backup reports', selectedRows.value)
+async function backupReports() {
+  try {
+    loading.value = true
 
-  loading.value = true
+    await $fetch(`/api/${route.params.project}/backup`, {
+      method: 'post',
+      body: Object.entries(selectedRows.value)
+        .filter(([_, value]) => value)
+        .map(([key]) => key)
+    })
 
-  setTimeout(() => {
+    setTimeout(() => {
+      loading.value = false
+      table.value?.tableApi?.toggleAllPageRowsSelected(false)
+      showSuccessMessage(t('notifications.report.backup', 2))
+      modal.bulkBackup = false
+      selectedRows.value = {}
+    }, DEFAULT_DELETE_TIMEOUT)
+  } catch (error) {
     loading.value = false
-    table.value?.tableApi?.toggleAllPageRowsSelected(false)
-    showSuccessMessage(t('notifications.report.backup', 2))
     modal.bulkBackup = false
     selectedRows.value = {}
-  }, DEFAULT_DELETE_TIMEOUT)
+    showErrorMessage(error)
+  }
 }
 
 function getStatusBadge(status: string) {
@@ -149,7 +169,7 @@ function getStatusBadge(status: string) {
   })
 }
 
-function getResultContent(result: ReportTableRow['result']) {
+function getResultContent(result: Report['result']) {
   const colorMap = {
     passed: 'text-success',
     failed: 'text-error'
@@ -166,7 +186,7 @@ function getResultContent(result: ReportTableRow['result']) {
   return h('div', { class: 'flex gap-4 sm:flex-col sm:gap-1' }, content)
 }
 
-const columns: TableColumn<ReportTableRow>[] = [
+const columns: TableColumn<Report>[] = [
   {
     id: 'select',
     header: ({ table }) =>
@@ -175,7 +195,7 @@ const columns: TableColumn<ReportTableRow>[] = [
         'onUpdate:modelValue': (value: boolean | 'indeterminate') => {
           table.toggleAllPageRowsSelected(!!value)
           if (value) {
-            data.value.forEach((item) => {
+            items.value.forEach((item) => {
               selectedRows.value[item.name] = !!value
             })
           } else {
@@ -317,7 +337,7 @@ const columns: TableColumn<ReportTableRow>[] = [
               <span class="w-1/5">{{ key }}:&nbsp;</span>
               <component :is="getStatusBadge(value as string)" v-if="key === 'status'" />
               <component
-                :is="getResultContent(value as ReportTableRow['result'])"
+                :is="getResultContent(value as Report['result'])"
                 v-else-if="key === 'result'"
                 class="text-sm sm:flex-row sm:gap-2"
               />
@@ -369,7 +389,7 @@ const columns: TableColumn<ReportTableRow>[] = [
               <span class="w-1/5">{{ key }}:&nbsp;</span>
               <component :is="getStatusBadge(value as string)" v-if="key === 'status'" />
               <component
-                :is="getResultContent(value as ReportTableRow['result'])"
+                :is="getResultContent(value as Report['result'])"
                 v-else-if="key === 'result'"
                 class="text-sm sm:flex-row sm:gap-2"
               />

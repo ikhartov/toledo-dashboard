@@ -20,10 +20,13 @@ export default {
       name: 'Test name'
     },
     diskUsage: {
-      description: '{label} {used} mb / {total} mb',
-      reference: 'References:',
-      test: 'Tests:',
-      title: 'Disk space usage'
+      backups: 'Backups:',
+      capacity: 'Capacity:',
+      description: '{used} mb',
+      references: 'References:',
+      reports: 'Tests:',
+      title: 'Disk space usage',
+      used: 'Used:'
     },
     reference: {
       page: 'References page',
