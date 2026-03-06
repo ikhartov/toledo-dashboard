@@ -1,8 +1,10 @@
 import type { ProjectConfig } from '~~/shared/types'
 import type { NitroRouteConfig } from 'nitropack/types'
+import { readFileSync } from 'node:fs'
+import { resolve } from 'node:path'
 
 const ENDPOINTS = ['api/**']
-export const PROJECTS_LIST: ProjectConfig[] = [
+const PROJECTS_LIST: ProjectConfig[] = [
   {
     id: 'bond',
     apiUrl: 'https://toledo-staging-bond-frontera.wlabel.site',
@@ -26,18 +28,44 @@ export const PROJECTS_LIST: ProjectConfig[] = [
   }
 ]
 
-export const NITRO_ROUTE_RULES: Record<string, NitroRouteConfig> = PROJECTS_LIST.reduce(
-  (acc, project) => {
-    ENDPOINTS.forEach((endpoint) => {
-      const path = `/_${project.id}/${endpoint}`
-      acc[path] = {
-        proxy: {
-          to: `${project.apiUrl}/${endpoint}`
-        }
-      }
-    })
+export const getProjectList = () => {
+  if (process.env.NODE_ENV === 'development') {
+    try {
+      const rawConfig = readFileSync(resolve('env.json'), 'utf8')
 
-    return acc
-  },
-  {} as Record<string, NitroRouteConfig>
-)
+      if (!rawConfig.trim()) {
+        console.error('env.json is empty')
+        return []
+      }
+
+      return JSON.parse(rawConfig) as ProjectConfig[]
+    } catch (error) {
+      console.error(error)
+      return []
+    }
+  }
+
+  return PROJECTS_LIST
+}
+
+export const getNitroRouteRules = () => {
+  const config = getProjectList()
+
+  const routes = config.reduce(
+    (acc, project) => {
+      ENDPOINTS.forEach((endpoint) => {
+        const path = `/_${project.id}/${endpoint}`
+        acc[path] = {
+          proxy: {
+            to: `${project.apiUrl}/${endpoint}`
+          }
+        }
+      })
+
+      return acc
+    },
+    {} as Record<string, NitroRouteConfig>
+  )
+
+  return routes
+}

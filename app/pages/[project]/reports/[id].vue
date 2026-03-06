@@ -4,21 +4,11 @@ definePageMeta({
 })
 
 const route = useRoute()
-const { projectsList } = storeToRefs(useConfigStore())
-
-const reportUrl = computed(() => {
-  const apiUrl = projectsList.value.find((project) => project.id === route.params.project)?.apiUrl
-
-  if (!apiUrl) {
-    return ''
-  }
-
-  return `${apiUrl}/report?test=${route.params.id}`
-})
+const { apiUrl } = storeToRefs(useConfigStore())
 </script>
 
 <template>
   <UiDashboardContent class="h-full">
-    <iframe class="w-full h-full" :src="reportUrl" />
+    <iframe class="w-full h-full" :src="`${apiUrl}/report?reportId=${route.params.id}&storageType=reports`" />
   </UiDashboardContent>
 </template>

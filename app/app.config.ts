@@ -27,7 +27,7 @@ const icons = {
   arrowNarrowUp: 'i-lucide-arrow-up-narrow-wide',
   arrowNarrowDown: 'i-lucide-arrow-down-wide-narrow',
   arrowUpDown: 'i-lucide-arrow-up-down',
-  hardDriveDownload: 'i-lucide-hard-drive-download',
+  hardDrive: 'i-lucide-hard-drive',
   // default
   arrowDown: 'i-lucide-arrow-down',
   arrowLeft: 'i-lucide-arrow-left',

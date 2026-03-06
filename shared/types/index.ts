@@ -8,19 +8,20 @@ export type Observer<T> = {
   [key: number | string]: T
 }
 
-export interface DiskSpace {
-  capacity: number
-  folders: {
-    backups: number
-    references: number
-    reports: number
-  }
-  used: number
+export type FormatedBytes = {
+  bytes: number
+  text: string
 }
 
-export interface DiskSpaceUsage {
-  testFolderSize: number
-  referenceFolderSize: number
+export interface DiskSpace<T> {
+  capacity: T
+  folders: {
+    backups?: T
+    references?: T
+    reports?: T
+    scenarios?: T
+  }
+  used?: T
 }
 
 export interface Environment {
@@ -53,6 +54,7 @@ export interface Report {
 }
 
 export interface Scenario {
-  label?: string
-  url?: string
+  label: string
+  url: string
+  [k: string]: unknown
 }

@@ -1,4 +1,3 @@
-import type { Scenario } from '~~/shared/types'
 import { throwError } from '~~/server/helpers/throwError'
 
 export default defineEventHandler(async (event) => {
@@ -7,12 +6,12 @@ export default defineEventHandler(async (event) => {
 
     if (!projectId) {
       throwError('projectId is not defined', 'GET_PROJECT_ERROR')
-      return []
+      return null
     }
 
-    return await $fetch<Scenario[]>(`/_${projectId}/api/scenarios`)
+    return await $fetch<string[]>(`/_${projectId}/api/references`)
   } catch (error) {
-    throwError(error, 'GET_PROJECT_SCENARIOS_ERROR')
-    return []
+    throwError(error, 'GET_REFERENCE_LIST_ERROR')
+    return null
   }
 })

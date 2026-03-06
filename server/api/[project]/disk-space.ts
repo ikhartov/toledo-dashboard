@@ -1,8 +1,8 @@
-import type { DiskSpace, DiskSpaceUsage } from '~~/shared/types'
-import { DEFAULT_DISK_CAPACITY } from '~~/shared/constants'
+import type { DiskSpace, FormatedBytes } from '~~/shared/types'
+import { formatBytes } from '~~/server/helpers/formatBytes'
 import { throwError } from '~~/server/helpers/throwError'
 
-export default defineEventHandler(async (event): Promise<DiskSpace | null> => {
+export default defineEventHandler(async (event): Promise<DiskSpace<FormatedBytes> | null> => {
   try {
     const projectId = getRouterParam(event, 'project')
 
@@ -11,17 +11,17 @@ export default defineEventHandler(async (event): Promise<DiskSpace | null> => {
       return null
     }
 
-    // TODO: refactor server response. should be type of DiskSpace
-    const { testFolderSize, referenceFolderSize } = await $fetch<DiskSpaceUsage>(`/_${projectId}/api/spase-usage`)
+    const { capacity, folders, used } = await $fetch<DiskSpace<number>>(`/_${projectId}/api/disk-space`)
 
     return {
-      capacity: DEFAULT_DISK_CAPACITY,
+      capacity: formatBytes(capacity),
       folders: {
-        backups: 0,
-        references: parseFloat((referenceFolderSize ?? 0).toFixed(2)),
-        reports: parseFloat((testFolderSize ?? 0).toFixed(2))
+        backups: formatBytes(folders.backups),
+        references: formatBytes(folders.references),
+        reports: formatBytes(folders.reports),
+        scenarios: formatBytes(folders.scenarios)
       },
-      used: parseFloat((referenceFolderSize + testFolderSize).toFixed(2))
+      used: formatBytes(used)
     }
   } catch (error) {
     throwError(error, 'GET_PROJECT_DISK_SPACE_ERROR')

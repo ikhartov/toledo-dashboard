@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { h, resolveComponent } from 'vue'
-import type { DiskSpace, Scenario } from '~~/shared/types'
-import type { TableColumn } from '@nuxt/ui'
+import type { DiskSpace, FormatedBytes, Scenario } from '~~/shared/types'
+import type { TableColumn, ProgressProps } from '@nuxt/ui'
 
 definePageMeta({
   middleware: 'auth'
@@ -16,9 +16,9 @@ const { t } = useI18n()
 const { ui } = useAppConfig()
 const route = useRoute()
 const { showErrorMessage, showSuccessMessage } = useNotifications()
-const { projectsList } = storeToRefs(useConfigStore())
+const { mockUrl } = storeToRefs(useConfigStore())
 
-const { data: diskSpaceData, error: diskSpaceError } = await useFetch<DiskSpace | null>(
+const { data: diskSpaceData, error: diskSpaceError } = await useFetch<DiskSpace<FormatedBytes> | null>(
   `/api/${route.params.project}/disk-space`
 )
 const { data: scenariosData, error: scenariosError } = await useFetch<Scenario[]>(
@@ -106,7 +106,6 @@ const columns: TableColumn<Scenario>[] = [
       })
     },
     cell: ({ row }) => {
-      const mockUrl = projectsList.value.find((project) => project.id === route.params.project)?.mockUrl
       const url = row.original.url?.charAt(0) === '/' ? row.original.url.slice(1) : row.original.url
 
       return h(
@@ -146,6 +145,46 @@ const columns: TableColumn<Scenario>[] = [
   }
 ]
 
+function getPercentOf(value: number, total: number) {
+  const percent = (value / total) * 100
+  const factor = Math.pow(10, 2)
+
+  return Math.round(percent * factor) / factor
+}
+
+const storageUsedPercent = computed(() => {
+  const { capacity, used } = diskSpaceData.value || {}
+  if (used?.bytes && capacity?.bytes) {
+    return getPercentOf(used.bytes, capacity.bytes)
+  }
+
+  return 0
+})
+const storageText = computed(() => {
+  const { capacity, used } = diskSpaceData.value || {}
+  if (used?.text && capacity?.text) {
+    return t('controlPanel.diskUsage.used', {
+      capacity: capacity.text,
+      used: used.text
+    })
+  }
+
+  return ''
+})
+const storageColor = computed(() => {
+  let color: ProgressProps['color'] = 'info'
+
+  if (storageUsedPercent.value >= 50 && storageUsedPercent.value <= 74) {
+    color = 'warning'
+  }
+
+  if (storageUsedPercent.value >= 75) {
+    color = 'error'
+  }
+
+  return color
+})
+
 async function handleStartTest() {
   try {
     await $fetch(`/api/${route.params.project}/start`)
@@ -175,32 +214,6 @@ async function handleStartSelectedTests() {
     showErrorMessage(error)
   }
 }
-function getPercentOf(value: number, total: number) {
-  return (value / total) * 100
-}
-function getStatusBadge(value?: number) {
-  let color = 'neutral'
-
-  if (value && diskSpaceData.value?.capacity) {
-    const percent = getPercentOf(value, diskSpaceData.value.capacity)
-
-    if (percent > 0 && percent <= 49) {
-      color = 'info'
-    }
-
-    if (percent >= 50 && percent <= 74) {
-      color = 'warning'
-    }
-
-    if (percent >= 75) {
-      color = 'error'
-    }
-  }
-
-  return h(UBadge, { variant: 'subtle', color }, () => {
-    return t('controlPanel.diskUsage.description', { used: value })
-  })
-}
 </script>
 
 <template>
@@ -209,33 +222,29 @@ function getStatusBadge(value?: number) {
       id="control-panel"
       class="gap-2 lg:gap-4 grid-cols-1 lg:grid-cols-2 xl:grid-cols-2 2xl:grid-cols-3 items-start"
     >
-      <UPageCard v-bind="ui.presets.pageCard.space" :icon="ui.icons.hardDriveDownload">
+      <UPageCard v-bind="ui.presets.pageCard.space" :icon="ui.icons.hardDrive">
         <template #header>
           <span>{{ t('controlPanel.diskUsage.title') }}</span>
         </template>
         <template #body>
-          <div class="flex flex-wrap gap-2">
-            <div class="flex gap-1 text-base text-pretty">
-              <span class="font-medium">{{ t('controlPanel.diskUsage.capacity') }}</span>
-              <UBadge variant="subtle" color="neutral" :label="`${diskSpaceData?.capacity} mb`" />
-            </div>
-            <div class="flex gap-1 text-base text-pretty">
-              <span class="font-medium">{{ t('controlPanel.diskUsage.used') }}</span>
-              <component :is="getStatusBadge(diskSpaceData?.used)" />
+          <div class="flex flex-col gap-2">
+            <UProgress :model-value="storageUsedPercent" :color="storageColor" :max="100" />
+            <div class="flex gap-2 justify-between items-center text-muted text-sm text-pretty">
+              <span>{{ `${storageUsedPercent}%` }}</span>
+              <span>{{ storageText }}</span>
             </div>
           </div>
-          <USeparator />
+          <USeparator class="my-2" />
           <div class="flex flex-wrap gap-2">
             <div
-              v-for="(value, key) in diskSpaceData?.folders"
+              v-for="(folder, key) in diskSpaceData?.folders"
               :key="key"
               class="flex gap-1 items-center text-xs text-pretty"
             >
-              <span>{{ t(`controlPanel.diskUsage.${key}`) }}</span>
               <UBadge
                 variant="subtle"
                 color="secondary"
-                :label="t('controlPanel.diskUsage.description', { used: value })"
+                :label="t(`controlPanel.diskUsage.${key}`, { text: folder?.text })"
               />
             </div>
           </div>
@@ -268,12 +277,20 @@ function getStatusBadge(value?: number) {
       >
         <template #header>
           <div class="w-full flex flex-wrap gap-2 justify-between">
-            <UInput
-              :model-value="table?.tableApi?.getColumn('label')?.getFilterValue() as string"
-              class="max-w-sm"
-              :placeholder="t('global.filter')"
-              @update:model-value="table?.tableApi?.getColumn('label')?.setFilterValue($event)"
-            />
+            <div class="max-w-sm flex gap-2 items-center">
+              <UBadge
+                color="neutral"
+                variant="subtle"
+                :label="t('controlPanel.scenarios.total', { total: scenariosData.length })"
+              />
+              <USeparator orientation="vertical" class="h-full" />
+              <UInput
+                :model-value="table?.tableApi?.getColumn('label')?.getFilterValue() as string"
+                class="max-w-sm"
+                :placeholder="t('global.filter')"
+                @update:model-value="table?.tableApi?.getColumn('label')?.setFilterValue($event)"
+              />
+            </div>
 
             <div v-if="isRowsSelected" class="flex gap-2">
               <UButton color="secondary" variant="outline" @click="handleStartSelectedTests">
