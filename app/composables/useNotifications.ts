@@ -1,4 +1,4 @@
-import type { ServerError } from '~~/shared/types'
+import type { ServerCommonResponse } from '~~/shared/types'
 import { DEFAULT_TOAST_TIMEOUT } from '~~/shared/constants'
 
 export function useNotifications() {
@@ -10,8 +10,8 @@ export function useNotifications() {
     if (typeof error === 'string') {
       result.description = error
     } else {
-      result.title = String((error as ServerError).statusCode)
-      result.description = (error as ServerError).statusMessage ?? (error as Error).message
+      result.title = String((error as ServerCommonResponse).statusCode)
+      result.description = (error as ServerCommonResponse).statusMessage ?? (error as Error).message
     }
 
     const { description, title } = result

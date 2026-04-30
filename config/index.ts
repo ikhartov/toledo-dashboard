@@ -1,43 +1,78 @@
 import type { ProjectConfig } from '~~/shared/types'
 import type { NitroRouteConfig } from 'nitropack/types'
+import { readFileSync } from 'node:fs'
+import { resolve } from 'node:path'
 
 const ENDPOINTS = ['api/**']
-export const PROJECTS_LIST: ProjectConfig[] = [
+const PROJECTS_LIST: ProjectConfig[] = [
   {
     id: 'bond',
     apiUrl: 'https://toledo-staging-bond-frontera.wlabel.site',
     label: 'Bond',
-    icon: 'i-lucide-bold',
+    icon: 'i-lucide-coins',
     mockUrl: 'https://mock-bond.staging.wlabel.site'
+  },
+  {
+    id: 'felix',
+    apiUrl: 'https://toledo-staging-felix-frontera.wlabel.site',
+    label: 'Felix',
+    icon: '',
+    mockUrl: 'https://mock-felix.staging.wlabel.site'
   },
   {
     id: 'thor',
     apiUrl: 'https://toledo-staging-thor-frontera.wlabel.site',
     label: 'Thor',
-    icon: 'i-lucide-command',
+    icon: 'i-lucide-gavel',
     mockUrl: 'https://mock-thor.staging.wlabel.site'
   },
   {
     id: 'vegas',
     apiUrl: 'https://toledo-staging-vegas-frontera.wlabel.site',
     label: 'Vegas',
-    icon: 'i-lucide-sunset',
+    icon: 'i-lucide-dices',
     mockUrl: 'https://mock-vegas.staging.wlabel.site'
   }
 ]
 
-export const NITRO_ROUTE_RULES: Record<string, NitroRouteConfig> = PROJECTS_LIST.reduce(
-  (acc, project) => {
-    ENDPOINTS.forEach((endpoint) => {
-      const path = `/_${project.id}/${endpoint}`
-      acc[path] = {
-        proxy: {
-          to: `${project.apiUrl}/${endpoint}`
-        }
-      }
-    })
+export const getProjectList = () => {
+  if (process.env.NODE_ENV === 'development') {
+    try {
+      const rawConfig = readFileSync(resolve('env.json'), 'utf8')
 
-    return acc
-  },
-  {} as Record<string, NitroRouteConfig>
-)
+      if (!rawConfig.trim()) {
+        console.error('env.json is empty')
+        return []
+      }
+
+      return JSON.parse(rawConfig) as ProjectConfig[]
+    } catch (error) {
+      console.error(error)
+      return []
+    }
+  }
+
+  return PROJECTS_LIST
+}
+
+export const getNitroRouteRules = () => {
+  const config = getProjectList()
+
+  const routes = config.reduce(
+    (acc, project) => {
+      ENDPOINTS.forEach((endpoint) => {
+        const path = `/_${project.id}/${endpoint}`
+        acc[path] = {
+          proxy: {
+            to: `${project.apiUrl}/${endpoint}`
+          }
+        }
+      })
+
+      return acc
+    },
+    {} as Record<string, NitroRouteConfig>
+  )
+
+  return routes
+}

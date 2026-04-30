@@ -1,6 +1,6 @@
 import type { ProjectConfig } from '~~/shared/types'
-import { PROJECTS_LIST } from '~~/config'
+import { getProjectList } from '~~/config'
 
 export default defineEventHandler(async (): Promise<ProjectConfig[]> => {
-  return PROJECTS_LIST
+  return getProjectList()
 })

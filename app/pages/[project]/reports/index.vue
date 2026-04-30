@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { h, resolveComponent } from 'vue'
 import type { TableColumn } from '@nuxt/ui'
-import type { Report } from '~~/shared/types'
+import type { FormatedBytes, Report } from '~~/shared/types'
 import { DEFAULT_DELETE_TIMEOUT } from '~~/shared/constants'
 
 definePageMeta({
@@ -16,15 +16,8 @@ const UCheckbox = resolveComponent('UCheckbox')
 const { t } = useI18n()
 const { ui } = useAppConfig()
 const route = useRoute()
+const { reports } = storeToRefs(useReportsStore())
 const { showErrorMessage, showSuccessMessage } = useNotifications()
-
-const { data: items, error } = await useFetch<Report[]>(`/api/${route.params.project}/reports`, {
-  default: () => []
-})
-
-if (error.value) {
-  showErrorMessage(error.value)
-}
 
 const loading = ref(false)
 const backupModel = ref<Report>()
@@ -39,9 +32,9 @@ const modal = reactive({
 const selectedRows = ref<Record<string, boolean | undefined>>({})
 
 const table = useTemplateRef('table')
-const columnFilters = ref([{ id: 'name', value: '' }])
+const columnFilters = ref([{ id: 'branchName', value: '' }])
 const rowSelection = ref({})
-const sorting = ref([{ id: 'name', desc: false }])
+const sorting = ref([{ id: 'branchName', desc: false }])
 
 const isRowsSelected = computed(() => Object.keys(selectedRows.value).length)
 
@@ -69,12 +62,12 @@ async function deleteReport() {
 
     await $fetch(`/api/${route.params.project}/delete`, {
       method: 'post',
-      body: deleteModel.value?.name
+      body: deleteModel.value?.id
     })
 
     setTimeout(() => {
       loading.value = false
-      showSuccessMessage(t('notifications.report.delete', 1), deleteModel.value?.name)
+      showSuccessMessage(t('notifications.report.delete', 1), deleteModel.value?.id)
       toggleDeleteModal()
     }, DEFAULT_DELETE_TIMEOUT)
   } catch (error) {
@@ -116,12 +109,12 @@ async function backupReport() {
 
     await $fetch(`/api/${route.params.project}/backup`, {
       method: 'post',
-      body: backupModel.value?.name
+      body: backupModel.value?.id
     })
 
     setTimeout(() => {
       loading.value = false
-      showSuccessMessage(t('notifications.report.backup', 1), backupModel.value?.name)
+      showSuccessMessage(t('notifications.report.backup', 1), backupModel.value?.id)
       toggleBackupModal()
     }, DEFAULT_DELETE_TIMEOUT)
   } catch (error) {
@@ -157,11 +150,36 @@ async function backupReports() {
   }
 }
 
+function getReportDate(createDate: string) {
+  const date = new Date(createDate)
+
+  return h('div', { class: 'flex flex-col gap-1 text-muted' }, [
+    h('span', {}, date.toLocaleDateString('uk')),
+    h('span', {}, date.toLocaleTimeString('uk'))
+  ])
+}
+
+function getSelectedReportInfo() {
+  return Object.keys(selectedRows.value).map((key) => {
+    const [env, branch, pipeline, timestamp] = key.split('_')
+
+    const date = new Date(Number(timestamp))
+
+    return {
+      title: branch,
+      description: `${env} / ${pipeline} / ${date.toLocaleDateString('uk')} / ${date.toLocaleTimeString('uk')}`
+    }
+  })
+}
+
 function getStatusBadge(status: string) {
   const color = {
+    crashed: 'error' as const,
+    error: 'error' as const,
     passed: 'success' as const,
-    failed: 'error' as const,
-    pending: 'neutral' as const
+    failed: 'warning' as const,
+    pending: 'neutral' as const,
+    unknown: 'error' as const
   }[status]
 
   return h(UBadge, { variant: 'subtle', color }, () => {
@@ -171,19 +189,32 @@ function getStatusBadge(status: string) {
 
 function getResultContent(result: Report['result']) {
   const colorMap = {
+    broken: 'text-error',
+    count: 'text-info',
     passed: 'text-success',
-    failed: 'text-error'
+    failed: 'text-warning'
   }
 
-  const content = Object.entries(result).map(([label, value]) => {
-    return h(
-      'span',
-      { class: `${colorMap[label as keyof typeof colorMap]}` },
-      `${t(`reports.status.${label}`)}: ${value}`
-    )
-  })
+  const content = Object.entries(result)
+    .filter(([label]) => label !== 'status' && label !== 'count')
+    .sort((a, b) => a[0].localeCompare(b[0]))
+    .reverse()
+    .map(([label, value]) => {
+      return h(
+        'span',
+        { class: value ? `${colorMap[label as keyof typeof colorMap]}` : 'text-muted' },
+        `${t(`reports.result.${label}`)}: ${value}`
+      )
+    })
 
-  return h('div', { class: 'flex gap-4 sm:flex-col sm:gap-1' }, content)
+  return h('div', { class: 'flex gap-4 sm:grid sm:grid-flow-col sm:grid-rows-2 sm:gap-1' }, [
+    h(
+      'span',
+      { class: result.count ? `${colorMap.count}` : 'text-muted' },
+      result.count ? `${t(`reports.result.count`)}: ${result.count}` : ''
+    ),
+    ...content
+  ])
 }
 
 const columns: TableColumn<Report>[] = [
@@ -195,8 +226,8 @@ const columns: TableColumn<Report>[] = [
         'onUpdate:modelValue': (value: boolean | 'indeterminate') => {
           table.toggleAllPageRowsSelected(!!value)
           if (value) {
-            items.value.forEach((item) => {
-              selectedRows.value[item.name] = !!value
+            reports.value.forEach((item) => {
+              selectedRows.value[item.id] = !!value
             })
           } else {
             if (Object.keys(selectedRows.value).length) {
@@ -214,23 +245,24 @@ const columns: TableColumn<Report>[] = [
         'onUpdate:modelValue': (value: boolean | 'indeterminate') => {
           row.toggleSelected(!!value)
           if (value) {
-            selectedRows.value[row.original.name] = !!value
-          } else if (selectedRows.value[row.original.name]) {
+            selectedRows.value[row.original.id] = !!value
+          } else if (selectedRows.value[row.original.id]) {
             // eslint-disable-next-line @typescript-eslint/no-dynamic-delete
-            delete selectedRows.value[row.original.name]
+            delete selectedRows.value[row.original.id]
           }
         }
       })
   },
   {
-    accessorKey: 'name',
+    id: 'branchName',
+    accessorKey: 'branchName',
     header: ({ column }) => {
       const isSorted = column.getIsSorted()
 
       return h(UButton, {
         color: 'neutral',
         variant: 'ghost',
-        label: t('reports.columns.name'),
+        label: t('reports.columns.branchName'),
         icon: isSorted
           ? isSorted === 'asc'
             ? ui.icons.arrowNarrowUp
@@ -241,18 +273,30 @@ const columns: TableColumn<Report>[] = [
       })
     },
     cell: ({ row }) => {
-      return h('span', { class: 'font-semibold' }, row.getValue('name'))
+      return h('span', { class: 'font-semibold' }, `${row.getValue('branchName')}`)
     }
   },
   {
-    accessorKey: 'status',
+    accessorKey: 'createDate',
+    header: t('reports.columns.createDate'),
+    cell: ({ row }) => getReportDate(row.getValue('createDate'))
+  },
+  {
+    id: 'size_text',
+    accessorKey: 'size.text',
+    header: t('reports.columns.size'),
+    cell: ({ row }) => row.getValue('size_text')
+  },
+  {
+    id: 'result_status',
+    accessorKey: 'result.status',
     header: t('reports.columns.status'),
-    cell: ({ row }) => getStatusBadge(row.getValue('status'))
+    cell: ({ row }) => getStatusBadge(row.getValue('result_status'))
   },
   {
     accessorKey: 'result',
     header: t('reports.columns.result'),
-    cell: ({ row }) => getResultContent(row.getValue('result'))
+    cell: ({ row }) => getResultContent(row.original.result)
   },
   {
     id: 'actions',
@@ -260,7 +304,7 @@ const columns: TableColumn<Report>[] = [
       return h('div', { class: 'flex gap-8 justify-between sm:justify-end' }, [
         h(UButton, {
           label: t('actions.open'),
-          to: `/${route.params.project}/reports/${row.original.name}`
+          to: `/${route.params.project}/reports/${row.original.id}`
         }),
         h(UButton, {
           label: t('actions.backup'),
@@ -290,10 +334,10 @@ const columns: TableColumn<Report>[] = [
         <template #header>
           <div class="w-full flex flex-wrap gap-2 justify-between">
             <UInput
-              :model-value="table?.tableApi?.getColumn('name')?.getFilterValue() as string"
+              :model-value="table?.tableApi?.getColumn('branchName')?.getFilterValue() as string"
               class="max-w-sm"
               :placeholder="t('global.filter')"
-              @update:model-value="table?.tableApi?.getColumn('name')?.setFilterValue($event)"
+              @update:model-value="table?.tableApi?.getColumn('branchName')?.setFilterValue($event)"
             />
 
             <div v-if="isRowsSelected" class="flex gap-2">
@@ -313,7 +357,7 @@ const columns: TableColumn<Report>[] = [
           v-model:sorting="sorting"
           class="border-t border-accented"
           :columns="columns"
-          :data="items"
+          :data="reports"
           :ui="{
             th: 'hidden first:table-cell nth-2:table-cell nth-2:col-span-3 lg:table-cell',
             tr: 'grid grid-cols-[33px_repeat(3,minmax(0,1fr))] sm:items-center lg:table-row',
@@ -333,14 +377,15 @@ const columns: TableColumn<Report>[] = [
       <template #body>
         <UPageCard :ui="{ container: 'p-2 sm:p-4' }">
           <template v-for="(value, key) in deleteModel" :key="key">
-            <div class="flex items-center">
-              <span class="w-1/5">{{ key }}:&nbsp;</span>
-              <component :is="getStatusBadge(value as string)" v-if="key === 'status'" />
+            <div :class="['flex items-center', { hidden: key === 'id' }]">
+              <span class="w-1/3">{{ t(`reports.columns.${key}`) }}:&nbsp;</span>
+              <component :is="getReportDate(value as string)" v-if="key === 'createDate'" />
               <component
                 :is="getResultContent(value as Report['result'])"
                 v-else-if="key === 'result'"
                 class="text-sm sm:flex-row sm:gap-2"
               />
+              <span v-else-if="key === 'size'" class="font-bold">{{ (value as FormatedBytes).text }}</span>
               <span v-else class="font-bold">{{ value }}</span>
             </div>
           </template>
@@ -358,11 +403,7 @@ const columns: TableColumn<Report>[] = [
       :ui="{ footer: 'justify-end' }"
     >
       <template #body>
-        <UScrollArea
-          v-slot="{ item, index }"
-          :items="Object.keys(selectedRows).map((key) => ({ description: key }))"
-          class="w-full max-h-64"
-        >
+        <UScrollArea v-slot="{ item, index }" :items="getSelectedReportInfo()" class="w-full max-h-64">
           <UPageCard
             v-bind="item as object"
             :variant="index % 2 === 0 ? 'soft' : 'outline'"
@@ -385,14 +426,15 @@ const columns: TableColumn<Report>[] = [
       <template #body>
         <UPageCard :ui="{ container: 'p-2 sm:p-4' }">
           <template v-for="(value, key) in backupModel" :key="key">
-            <div class="flex items-center">
-              <span class="w-1/5">{{ key }}:&nbsp;</span>
-              <component :is="getStatusBadge(value as string)" v-if="key === 'status'" />
+            <div :class="['flex items-center', { hidden: key === 'id' }]">
+              <span class="w-1/3">{{ t(`reports.columns.${key}`) }}:&nbsp;</span>
+              <component :is="getReportDate(value as string)" v-if="key === 'createDate'" />
               <component
                 :is="getResultContent(value as Report['result'])"
                 v-else-if="key === 'result'"
                 class="text-sm sm:flex-row sm:gap-2"
               />
+              <span v-else-if="key === 'size'" class="font-bold">{{ (value as FormatedBytes).text }}</span>
               <span v-else class="font-bold">{{ value }}</span>
             </div>
           </template>
@@ -410,11 +452,7 @@ const columns: TableColumn<Report>[] = [
       :ui="{ footer: 'justify-end' }"
     >
       <template #body>
-        <UScrollArea
-          v-slot="{ item, index }"
-          :items="Object.keys(selectedRows).map((key) => ({ description: key }))"
-          class="w-full max-h-64"
-        >
+        <UScrollArea v-slot="{ item, index }" :items="getSelectedReportInfo()" class="w-full max-h-64">
           <UPageCard
             v-bind="item as object"
             :variant="index % 2 === 0 ? 'soft' : 'outline'"

@@ -1,4 +1,5 @@
 import type { Report } from '~~/shared/types'
+import { formatBytes } from '~~/server/helpers/formatBytes'
 import { throwError } from '~~/server/helpers/throwError'
 
 export default defineEventHandler(async (event): Promise<Report[]> => {
@@ -6,19 +7,18 @@ export default defineEventHandler(async (event): Promise<Report[]> => {
     const projectId = getRouterParam(event, 'project')
 
     if (!projectId) {
-      throwError('projectId is not defined', 'GET_PROJECT_ERROR')
-      return []
+      return throwError('projectId is not defined', 'GET_PROJECT_ERROR')
     }
 
-    const response = await $fetch<Report[]>(`/_${projectId}/api/test-list`)
+    const reports = await $fetch<Report<number>[]>(`/_${projectId}/api/reports`)
 
-    return response.map((report) => ({
-      name: report.name,
-      status: report.result.failed ? 'failed' : report.result.passed ? 'passed' : 'pending',
-      result: { passed: report.result.passed, failed: report.result.failed }
-    }))
+    return reports.map((report) => {
+      return {
+        ...report,
+        size: formatBytes(report.size)
+      }
+    })
   } catch (error) {
-    throwError(error, 'GET_PROJECT_REPORTS_ERROR')
-    return []
+    return throwError(error, 'GET_PROJECT_REPORTS_ERROR')
   }
 })

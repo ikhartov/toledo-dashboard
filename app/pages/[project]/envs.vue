@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { h, resolveComponent } from 'vue'
 import type { TableColumn } from '@nuxt/ui'
-import type { Environment, Report } from '~~/shared/types'
+import type { Application } from '~~/shared/types'
 
 definePageMeta({
   middleware: 'auth',
@@ -14,40 +14,44 @@ const ULink = resolveComponent('ULink')
 const { t } = useI18n()
 const { ui } = useAppConfig()
 const route = useRoute()
+const { applications } = storeToRefs(useApplicationsStore())
+const { globalMismatchThreshold } = storeToRefs(useConfigStore())
+const { reports } = storeToRefs(useReportsStore())
 const { showErrorMessage, showSuccessMessage } = useNotifications()
+const { user } = useCurrentUser()
 
-const { data: items, error } = await useFetch<Environment[]>(`/api/${route.params.project}/environments`, {
-  default: () => []
+const modal = reactive({
+  startTest: false
 })
+const selectedApp = ref<Application>()
+const misMatchThreshold = ref(globalMismatchThreshold.value)
+const table = useTemplateRef('table')
+const columnFilters = ref([{ id: 'name', value: '' }])
+const sorting = ref([{ id: 'name', desc: false }])
 
-const { data: reports, error: reportsError } = await useFetch<Report[]>(`/api/${route.params.project}/reports`, {
-  default: () => []
-})
-
-if (error.value) {
-  showErrorMessage(error.value)
-}
-
-if (reportsError.value) {
-  showErrorMessage(reportsError.value)
-}
-
-async function handleStartTest(row: Environment) {
+async function handleStartTest() {
   try {
     await $fetch(`/api/${route.params.project}/start`, {
-      query: { service: row.id }
+      method: 'post',
+      body: {
+        application: selectedApp.value,
+        misMatchThreshold: misMatchThreshold.value,
+        userName: user.value?.name
+      }
     })
-    showSuccessMessage(t('notifications.tests.start'), row.name)
+    showSuccessMessage(t('notifications.tests.start'), selectedApp.value?.name)
+    toggleStartTestModal()
   } catch (error) {
     showErrorMessage(error)
   }
 }
 
-const table = useTemplateRef('table')
-const columnFilters = ref([{ id: 'name', value: '' }])
-const sorting = ref([{ id: 'name', desc: false }])
+function toggleStartTestModal(row?: Application) {
+  modal.startTest = !modal.startTest
+  selectedApp.value = row
+}
 
-const columns: TableColumn<Environment>[] = [
+const columns: TableColumn<Application>[] = [
   {
     accessorKey: 'name',
     header: ({ column }) => {
@@ -73,20 +77,33 @@ const columns: TableColumn<Environment>[] = [
     }
   },
   {
+    accessorKey: 'version',
+    header: t('envs.columns.version'),
+    cell: ({ row }) => {
+      const { tag, pipeline } = row.getValue('version') as NonNullable<Application['version']>
+
+      return h('span', { class: 'font-medium' }, `${tag} / ${pipeline}`)
+    }
+  },
+  {
     id: 'actions',
     cell: ({ row }) => {
+      const report = reports.value.find((r) => {
+        const { pipeline } = row.getValue('version') as NonNullable<Application['version']>
+        return (r.pipeline && pipeline?.includes(r.pipeline)) || row.original.name?.includes(r.branchName)
+      })
       return h('div', { class: 'flex flex-wrap gap-4 lg:gap-6 justify-between sm:justify-end' }, [
-        reports.value.find((report) => row.original.name?.includes(report.name))
+        report
           ? h(UButton, {
               label: t('actions.showReport'),
               variant: 'outline',
               color: 'secondary',
-              to: `/${route.params.project}/reports/${row.original.name}`
+              to: `/${route.params.project}/reports/${report.id}`
             })
           : undefined,
         h(UButton, {
           label: t('actions.startTest'),
-          onClick: () => handleStartTest(row.original)
+          onClick: () => toggleStartTestModal(row.original)
         })
       ])
     }
@@ -117,7 +134,7 @@ const columns: TableColumn<Environment>[] = [
           v-model:sorting="sorting"
           class="border-t border-accented"
           :columns="columns"
-          :data="items"
+          :data="applications"
           :ui="{
             tr: 'grid sm:grid-cols-2 lg:table-row',
             td: 'nth-1:whitespace-pre-wrap'
@@ -125,5 +142,28 @@ const columns: TableColumn<Environment>[] = [
         />
       </UPageCard>
     </UPageGrid>
+    <UModal
+      v-model:open="modal.startTest"
+      :title="t('modal.startTest.title')"
+      :description="t('modal.startTest.description', { name: selectedApp?.name })"
+      :ui="{ footer: 'justify-end' }"
+    >
+      <template #body>
+        <UFormField :label="t('modal.startTest.misMatchThreshold')">
+          <UInputNumber
+            v-model="misMatchThreshold"
+            class="w-full"
+            :min="0"
+            :max="100"
+            :step="0.01"
+            :placeholder="t('modal.startTest.misMatchThresholdPlaceholder')"
+          />
+        </UFormField>
+      </template>
+      <template #footer>
+        <UButton color="primary" :label="t(`actions.startTest`)" @click="handleStartTest()" />
+        <UButton color="neutral" variant="outline" :label="t('actions.cancel')" @click="() => toggleStartTestModal()" />
+      </template>
+    </UModal>
   </UiDashboardContent>
 </template>

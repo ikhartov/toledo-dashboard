@@ -4,41 +4,32 @@ export default {
     backup: 'Backup',
     backupSelected: 'Backup reports',
     cancel: 'Cancel',
-    createReference: 'Create reference',
+    createReference: 'Create reference | Create references',
+    createSelectedReference: 'Create selected reference | Create selected references',
     delete: 'Delete',
     deleteSelected: 'Delete reports',
     open: 'Open',
     showReport: 'Show report',
-    startSelectedTest: 'Start selected test',
+    startSelectedTest: 'Start selected test | Start selected tests',
     startTest: 'Start test'
   },
   breadcrumbs: {
     home: 'Home'
   },
   controlPanel: {
-    columns: {
-      name: 'Test name'
-    },
     diskUsage: {
-      backups: 'Backups:',
-      capacity: 'Capacity:',
-      description: '{used} mb',
-      references: 'References:',
-      reports: 'Tests:',
-      title: 'Disk space usage',
-      used: 'Used:'
-    },
-    reference: {
-      page: 'References page',
-      title: 'References'
-    },
-    test: {
-      title: 'Start new test'
+      backups: 'Backups: {text}',
+      references: 'References: {text}',
+      reports: 'Tests: {text}',
+      scenarios: 'Scenarios: {text}',
+      title: 'File storage',
+      used: '{used} used out of {capacity}'
     }
   },
   envs: {
     columns: {
-      name: 'Environment name'
+      name: 'Environment name',
+      version: 'Version'
     }
   },
   global: {
@@ -73,10 +64,29 @@ export default {
         'Are you sure you want to backup the report? | Are you sure you want to backup the selected reports?',
       title: 'Backup report | Backup reports'
     },
+    createReference: {
+      description:
+        'Are you sure you want to create reference for selected scenario? | Are you sure you want to create references for selected scenarios?',
+      title: 'Create reference | Create references'
+    },
     delete: {
       description:
         'Are you sure you want to delete the report? | Are you sure you want to delete the selected reports?',
       title: 'Delete report | Delete reports'
+    },
+    startSelectedTest: {
+      description: 'Config parameters for test',
+      headline: 'Choose application',
+      misMatchThreshold: 'Mismatch threshold',
+      misMatchThresholdPlaceholder: 'Set mismatch threshold',
+      searchPlaceholder: 'Search applications...',
+      title: 'Start selected test | Start selected tests'
+    },
+    startTest: {
+      description: 'Launch test for: {name} environment',
+      misMatchThreshold: 'Mismatch threshold',
+      misMatchThresholdPlaceholder: 'Set mismatch threshold',
+      title: 'Start test'
     }
   },
   mode: {
@@ -85,10 +95,12 @@ export default {
     system: 'System'
   },
   navigation: {
+    backups: 'Backups',
     envs: 'Environments',
     panel: 'Control panel',
     references: 'References',
-    reports: 'Reports'
+    reports: 'Reports',
+    scenarios: 'Scenarios'
   },
   notifications: {
     references: {
@@ -105,15 +117,38 @@ export default {
   },
   reports: {
     columns: {
-      name: 'Report name',
+      branchName: 'Branch name',
+      createDate: 'Created',
+      environment: 'Environment',
+      id: 'ID',
+      isDynamic: 'Dynamic env',
+      pipeline: 'Pipeline ID',
       result: 'Result',
+      size: 'Size',
       status: 'Status'
     },
+    result: {
+      broken: 'Broken',
+      count: 'Total',
+      failed: 'Failed',
+      passed: 'Passed'
+    },
     status: {
+      crashed: 'Crashed',
+      error: 'Error',
       failed: 'Failed',
       passed: 'Passed',
-      pending: 'Pending'
+      pending: 'Pending',
+      unknown: 'Unknown'
     }
+  },
+  scenarios: {
+    columns: {
+      name: 'Test name'
+    },
+    filtered: 'Scenarios filtered: {count}',
+    selected: 'Scenarios selected: {count}',
+    total: 'Scenarios total: {count}'
   },
   user: {
     logout: 'Logout'
