@@ -96,9 +96,9 @@ function toggleModal(label?: string, image?: string) {
         </template>
       </UPageList>
     </UPageGrid>
-    <UModal v-model:open="modalOpen" :title="fullSizeReference.label" class="max-w-[1440px] h-auto">
+    <UModal v-model:open="modalOpen" :title="fullSizeReference.label" class="max-w-[1440px] w-auto h-auto">
       <template #body>
-        <NuxtImg class="mx-auto" :src="fullSizeReference.image" loading="lazy" />
+        <NuxtImg class="mx-auto min-w-80" :src="fullSizeReference.image" loading="lazy" />
       </template>
     </UModal>
   </UiDashboardContent>

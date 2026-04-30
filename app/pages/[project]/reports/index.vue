@@ -17,6 +17,7 @@ const { t } = useI18n()
 const { ui } = useAppConfig()
 const route = useRoute()
 const { reports } = storeToRefs(useReportsStore())
+const { refreshReports } = useReportsStore()
 const { showErrorMessage, showSuccessMessage } = useNotifications()
 
 const loading = ref(false)
@@ -31,12 +32,17 @@ const modal = reactive({
 
 const selectedRows = ref<Record<string, boolean | undefined>>({})
 
-const table = useTemplateRef('table')
+const tableRef = useTemplateRef('tableRef')
 const columnFilters = ref([{ id: 'branchName', value: '' }])
 const rowSelection = ref({})
 const sorting = ref([{ id: 'branchName', desc: false }])
 
 const isRowsSelected = computed(() => Object.keys(selectedRows.value).length)
+
+function clearRowsSelection() {
+  selectedRows.value = {}
+  tableRef.value?.tableApi.toggleAllRowsSelected(false)
+}
 
 function toggleBackupModal(row?: Report) {
   modal.backup = !modal.backup
@@ -48,29 +54,42 @@ function toggleDeleteModal(row?: Report) {
   deleteModel.value = row
 }
 
-function toggleBackupSelected() {
+function toggleBackupSelected(clearSelection = false) {
   modal.bulkBackup = !modal.bulkBackup
+
+  if (clearSelection) {
+    clearRowsSelection()
+  }
 }
 
-function toggleDeleteSelected() {
+function toggleDeleteSelected(clearSelection = false) {
   modal.bulkDelete = !modal.bulkDelete
+
+  if (clearSelection) {
+    clearRowsSelection()
+  }
 }
 
 async function deleteReport() {
   try {
     loading.value = true
 
-    await $fetch(`/api/${route.params.project}/delete`, {
+    await $fetch(`/api/${route.params.project}/action/delete`, {
       method: 'post',
-      body: deleteModel.value?.id
+      body: {
+        folders: [deleteModel.value?.id],
+        type: 'reports'
+      }
     })
 
-    setTimeout(() => {
+    setTimeout(async () => {
+      await refreshReports()
       loading.value = false
       showSuccessMessage(t('notifications.report.delete', 1), deleteModel.value?.id)
       toggleDeleteModal()
     }, DEFAULT_DELETE_TIMEOUT)
   } catch (error) {
+    await refreshReports()
     loading.value = false
     toggleDeleteModal()
     showErrorMessage(error)
@@ -81,24 +100,26 @@ async function deleteReports() {
   try {
     loading.value = true
 
-    await $fetch(`/api/${route.params.project}/delete`, {
+    await $fetch(`/api/${route.params.project}/action/delete`, {
       method: 'post',
-      body: Object.entries(selectedRows.value)
-        .filter(([_, value]) => value)
-        .map(([key]) => key)
+      body: {
+        folders: Object.entries(selectedRows.value)
+          .filter(([_, value]) => value)
+          .map(([key]) => key),
+        type: 'reports'
+      }
     })
 
-    setTimeout(() => {
+    setTimeout(async () => {
+      await refreshReports()
       loading.value = false
-      table.value?.tableApi?.toggleAllPageRowsSelected(false)
       showSuccessMessage(t('notifications.report.delete', 2))
-      modal.bulkDelete = false
-      selectedRows.value = {}
+      toggleDeleteSelected(true)
     }, DEFAULT_DELETE_TIMEOUT)
   } catch (error) {
+    await refreshReports()
     loading.value = false
-    modal.bulkDelete = false
-    selectedRows.value = {}
+    toggleDeleteSelected(true)
     showErrorMessage(error)
   }
 }
@@ -107,9 +128,11 @@ async function backupReport() {
   try {
     loading.value = true
 
-    await $fetch(`/api/${route.params.project}/backup`, {
+    await $fetch(`/api/${route.params.project}/action/backup`, {
       method: 'post',
-      body: backupModel.value?.id
+      body: {
+        folders: [backupModel.value?.id]
+      }
     })
 
     setTimeout(() => {
@@ -128,24 +151,23 @@ async function backupReports() {
   try {
     loading.value = true
 
-    await $fetch(`/api/${route.params.project}/backup`, {
+    await $fetch(`/api/${route.params.project}/action/backup`, {
       method: 'post',
-      body: Object.entries(selectedRows.value)
-        .filter(([_, value]) => value)
-        .map(([key]) => key)
+      body: {
+        folders: Object.entries(selectedRows.value)
+          .filter(([_, value]) => value)
+          .map(([key]) => key)
+      }
     })
 
     setTimeout(() => {
       loading.value = false
-      table.value?.tableApi?.toggleAllPageRowsSelected(false)
       showSuccessMessage(t('notifications.report.backup', 2))
-      modal.bulkBackup = false
-      selectedRows.value = {}
+      toggleBackupSelected(true)
     }, DEFAULT_DELETE_TIMEOUT)
   } catch (error) {
     loading.value = false
-    modal.bulkBackup = false
-    selectedRows.value = {}
+    toggleBackupSelected(true)
     showErrorMessage(error)
   }
 }
@@ -334,24 +356,24 @@ const columns: TableColumn<Report>[] = [
         <template #header>
           <div class="w-full flex flex-wrap gap-2 justify-between">
             <UInput
-              :model-value="table?.tableApi?.getColumn('branchName')?.getFilterValue() as string"
+              :model-value="tableRef?.tableApi?.getColumn('branchName')?.getFilterValue() as string"
               class="max-w-sm"
               :placeholder="t('global.filter')"
-              @update:model-value="table?.tableApi?.getColumn('branchName')?.setFilterValue($event)"
+              @update:model-value="tableRef?.tableApi?.getColumn('branchName')?.setFilterValue($event)"
             />
 
             <div v-if="isRowsSelected" class="flex gap-2">
-              <UButton color="secondary" variant="outline" @click="toggleBackupSelected">
+              <UButton color="secondary" variant="outline" @click="() => toggleBackupSelected()">
                 {{ t('actions.backupSelected') }}
               </UButton>
-              <UButton color="error" variant="outline" @click="toggleDeleteSelected">
+              <UButton color="error" variant="outline" @click="() => toggleDeleteSelected()">
                 {{ t('actions.deleteSelected') }}
               </UButton>
             </div>
           </div>
         </template>
         <UTable
-          ref="table"
+          ref="tableRef"
           v-model:column-filters="columnFilters"
           v-model:row-selection="rowSelection"
           v-model:sorting="sorting"

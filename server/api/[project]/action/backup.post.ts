@@ -1,6 +1,6 @@
 import { throwError } from '~~/server/helpers/throwError'
 
-export default defineEventHandler(async (event): Promise<void> => {
+export default defineEventHandler(async (event) => {
   try {
     const projectId = getRouterParam(event, 'project')
 
@@ -11,16 +11,15 @@ export default defineEventHandler(async (event): Promise<void> => {
 
     const body = await readBody(event)
 
-    return await $fetch(`/_${projectId}/api/action/start`, {
+    return await $fetch(`/_${projectId}/api/action/backup`, {
       method: 'post',
       headers: {
-        'Content-Type': 'application/json',
-        'Access-Control-Allow-Origin': '*'
+        'Content-Type': 'application/json'
       },
       body: JSON.stringify(body)
     })
   } catch (error) {
-    throwError(error, 'START_TEST_ERROR')
+    throwError(error, 'BACKUP_TEST_ERROR')
     return
   }
 })
