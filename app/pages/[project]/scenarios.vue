@@ -49,22 +49,28 @@ const rowSelection = ref({})
 const sorting = ref([{ id: 'label', desc: false }])
 const filteredRowsCount = ref(0)
 
+const isRowsSelected = computed(() => Object.keys(selectedRows.value).length)
+const items = computed(() => {
+  return scenariosData.value.map((scenario) => ({
+    label: scenario.label,
+    url: scenario.url
+  }))
+})
+
 function clearRowsSelection() {
-  if (Object.keys(selectedRows.value).length) {
-    for (const key in selectedRows.value) {
-      // eslint-disable-next-line @typescript-eslint/no-dynamic-delete
-      delete selectedRows.value[key]
-    }
-  }
+  selectedRows.value = {}
   tableRef.value?.tableApi.toggleAllRowsSelected(false)
 }
+
 function toggleStartTestModal(clearSelection = false) {
   modal.startTest = !modal.startTest
+  selectedApp.value = null
 
   if (clearSelection) {
     clearRowsSelection()
   }
 }
+
 function toggleCreateReferenceModal(clearSelection = false) {
   modal.createReference = !modal.createReference
 
@@ -73,13 +79,69 @@ function toggleCreateReferenceModal(clearSelection = false) {
   }
 }
 
-const isRowsSelected = computed(() => Object.keys(selectedRows.value).length)
-const items = computed(() => {
-  return scenariosData.value.map((scenario) => ({
-    label: scenario.label,
-    url: scenario.url
-  }))
-})
+function getApplicationsInfo(): CommandPaletteGroup[] {
+  return [
+    {
+      id: 'persistentAppsList',
+      label: searchQuery.value ? `Persistent apps matching “${searchQuery.value}”...` : 'Persistent apps',
+      items: persistentAppsList.value.map((app) => ({
+        label: app.name,
+        description: `${app.version?.tag} / ${app.version?.pipeline}`,
+        app
+      }))
+    },
+    {
+      id: 'dynamicAppsList',
+      label: searchQuery.value ? `Dynamic apps matching “${searchQuery.value}”...` : 'Dynamic apps',
+      items: dynamicAppsList.value.map((app) => ({ label: app.name, app }))
+    }
+  ]
+}
+
+async function handleStartTest() {
+  try {
+    await $fetch(`/api/${route.params.project}/action/start`, {
+      method: 'post',
+      body: {
+        application: selectedApp.value?.app,
+        misMatchThreshold: misMatchThreshold.value,
+        scenarios: Object.entries(selectedRows.value)
+          .filter(([_, value]) => value)
+          .map(([key]) => key),
+        userName: user.value?.name
+      }
+    })
+    showSuccessMessage(t('notifications.tests.start'))
+    toggleStartTestModal(true)
+  } catch (error) {
+    showErrorMessage(error)
+  }
+}
+
+async function handleCreateReferences() {
+  try {
+    const body: ReferenceRequestBody = {
+      scenarios: Object.entries(selectedRows.value)
+        .filter(([_, value]) => value)
+        .map(([key]) => key),
+      userName: user.value?.name
+    }
+
+    await $fetch(`/api/${route.params.project}/action/reference`, { method: 'post', body })
+
+    showSuccessMessage(t('notifications.references.start'))
+    toggleCreateReferenceModal(true)
+  } catch (error) {
+    showErrorMessage(error)
+  }
+}
+
+function handleFilterChange(query: string) {
+  tableRef.value?.tableApi?.getColumn('label')?.setFilterValue(query)
+
+  const filteredRows = tableRef.value?.tableApi?.getFilteredRowModel().rows
+  filteredRowsCount.value = filteredRows?.length || 0
+}
 
 const columns: TableColumn<Scenario>[] = [
   {
@@ -97,7 +159,7 @@ const columns: TableColumn<Scenario>[] = [
               }
             })
           } else {
-            if (Object.keys(selectedRows.value).length) {
+            if (isRowsSelected.value) {
               for (const key in selectedRows.value) {
                 // eslint-disable-next-line @typescript-eslint/no-dynamic-delete
                 delete selectedRows.value[key]
@@ -163,7 +225,7 @@ const columns: TableColumn<Scenario>[] = [
           color: 'secondary',
           onClick: () => {
             table.toggleAllRowsSelected(false)
-            if (Object.keys(selectedRows.value).length) {
+            if (isRowsSelected.value) {
               for (const key in selectedRows.value) {
                 // eslint-disable-next-line @typescript-eslint/no-dynamic-delete
                 delete selectedRows.value[key]
@@ -182,67 +244,6 @@ const columns: TableColumn<Scenario>[] = [
     }
   }
 ]
-
-function getApplicationsInfo(): CommandPaletteGroup[] {
-  return [
-    {
-      id: 'persistentAppsList',
-      label: searchQuery.value ? `Persistent apps matching “${searchQuery.value}”...` : 'Persistent apps',
-      items: persistentAppsList.value.map((app) => ({
-        label: app.name,
-        description: `${app.version?.tag} / ${app.version?.pipeline}`,
-        app
-      }))
-    },
-    {
-      id: 'dynamicAppsList',
-      label: searchQuery.value ? `Dynamic apps matching “${searchQuery.value}”...` : 'Dynamic apps',
-      items: dynamicAppsList.value.map((app) => ({ label: app.name, app }))
-    }
-  ]
-}
-async function handleStartTest() {
-  try {
-    await $fetch(`/api/${route.params.project}/start`, {
-      method: 'post',
-      body: {
-        application: selectedApp.value?.app,
-        misMatchThreshold: misMatchThreshold.value,
-        scenarios: Object.entries(selectedRows.value)
-          .filter(([_, value]) => value)
-          .map(([key]) => key),
-        userName: user.value?.name
-      }
-    })
-    showSuccessMessage(t('notifications.tests.start'))
-    toggleStartTestModal(true)
-  } catch (error) {
-    showErrorMessage(error)
-  }
-}
-async function handleCreateReferences() {
-  try {
-    const body: ReferenceRequestBody = {
-      scenarios: Object.entries(selectedRows.value)
-        .filter(([_, value]) => value)
-        .map(([key]) => key),
-      userName: user.value?.name
-    }
-
-    await $fetch(`/api/${route.params.project}/action/reference`, { method: 'post', body })
-
-    showSuccessMessage(t('notifications.references.start'))
-    toggleCreateReferenceModal(true)
-  } catch (error) {
-    showErrorMessage(error)
-  }
-}
-function handleFilterChange(query: string) {
-  tableRef.value?.tableApi?.getColumn('label')?.setFilterValue(query)
-
-  const filteredRows = tableRef.value?.tableApi?.getFilteredRowModel().rows
-  filteredRowsCount.value = filteredRows?.length || 0
-}
 </script>
 
 <template>

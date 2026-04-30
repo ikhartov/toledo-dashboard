@@ -4,7 +4,11 @@ export const useReportsStore = defineStore('test', () => {
   const route = useRoute()
   const { showErrorMessage } = useNotifications()
 
-  const { data: reports, error } = useFetch<Report[]>(`/api/${route.params.project}/reports`, {
+  const {
+    data: reports,
+    error,
+    refresh: refreshReports
+  } = useFetch<Report[]>(`/api/${route.params.project}/reports`, {
     default: () => []
   })
 
@@ -15,6 +19,7 @@ export const useReportsStore = defineStore('test', () => {
   })
 
   return {
-    reports
+    reports,
+    refreshReports
   }
 })

@@ -31,7 +31,7 @@ const sorting = ref([{ id: 'name', desc: false }])
 
 async function handleStartTest() {
   try {
-    await $fetch(`/api/${route.params.project}/start`, {
+    await $fetch(`/api/${route.params.project}/action/start`, {
       method: 'post',
       body: {
         application: selectedApp.value,
