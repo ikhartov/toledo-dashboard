@@ -1,4 +1,4 @@
-import type { ProjectConfig } from '~~/shared/types'
+import type { ProjectConfig, Settings } from '~~/shared/types'
 
 export const useConfigStore = defineStore('config', () => {
   const route = useRoute()
@@ -8,6 +8,10 @@ export const useConfigStore = defineStore('config', () => {
     default: () => []
   })
 
+  const { data: settingsData, error: settingsError } = useFetch<Settings | null>(
+    `/api/${route.params.project}/settings`
+  )
+
   const apiUrl = computed(() => {
     return projectsList.value.find((project) => project.id === route.params.project)?.apiUrl
   })
@@ -16,15 +20,24 @@ export const useConfigStore = defineStore('config', () => {
     return projectsList.value.find((project) => project.id === route.params.project)?.mockUrl
   })
 
+  const globalMismatchThreshold = computed(() => {
+    return settingsData.value?.misMatchThreshold ?? 0
+  })
+
   onMounted(() => {
     if (projectsError.value) {
       showErrorMessage(projectsError.value)
+    }
+
+    if (settingsError.value) {
+      showErrorMessage(settingsError.value)
     }
   })
 
   return {
     apiUrl,
     mockUrl,
+    globalMismatchThreshold,
     projectsList
   }
 })

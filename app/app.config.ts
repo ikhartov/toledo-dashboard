@@ -20,6 +20,7 @@ const icons = {
   chevronsUpDown: 'i-lucide-chevrons-up-down',
   controlPanel: 'i-lucide-sliders-vertical',
   image: 'i-lucide-image',
+  images: 'i-lucide-images',
   imagePlus: 'i-lucide-image-plus',
   logout: 'i-lucide-log-out',
   palette: 'i-lucide-palette',
@@ -28,6 +29,7 @@ const icons = {
   arrowNarrowDown: 'i-lucide-arrow-down-wide-narrow',
   arrowUpDown: 'i-lucide-arrow-up-down',
   hardDrive: 'i-lucide-hard-drive',
+  listTree: 'i-lucide-list-tree',
   // default
   arrowDown: 'i-lucide-arrow-down',
   arrowLeft: 'i-lucide-arrow-left',
@@ -53,6 +55,7 @@ const icons = {
   file: 'i-lucide-file',
   folder: 'i-lucide-folder',
   folderOpen: 'i-lucide-folder-open',
+  folderArchive: 'i-lucide-folder-archive',
   hash: 'i-lucide-hash',
   info: 'i-lucide-info',
   light: 'i-lucide-sun',

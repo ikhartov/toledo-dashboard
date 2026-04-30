@@ -52,7 +52,8 @@ export default defineNuxtPlugin({
             document.querySelector('style#nuxt-ui-colors').innerHTML = html;
             `.replace(/\s+/g, ' '),
             type: 'text/javascript',
-            tagPriority: -1
+            tagPriority: -1,
+            tagPosition: 'bodyClose'
           }
         ]
       })

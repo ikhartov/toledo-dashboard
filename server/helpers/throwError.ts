@@ -1,7 +1,7 @@
-import type { ServerError } from '~~/shared/types'
+import type { ServerCommonResponse } from '~~/shared/types'
 
 export const throwError = (error: unknown, name: string, code = 400) => {
-  const input: ServerError = {}
+  const input: ServerCommonResponse = {}
 
   input.statusCode = code
   input.statusMessage = error instanceof Error ? error.message : String(error)

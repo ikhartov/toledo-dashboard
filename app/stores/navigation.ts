@@ -169,19 +169,29 @@ export const useNavigationStore = defineStore('navigation', () => {
       exact: true
     },
     {
+      label: t('navigation.scenarios'),
+      icon: ui.icons.listTree,
+      to: localePath(`/${projectId}/scenarios`)
+    },
+    {
       label: t('navigation.envs'),
       icon: ui.icons.appWindow,
       to: localePath(`/${projectId}/envs`)
     },
     {
       label: t('navigation.references'),
-      icon: ui.icons.image,
+      icon: ui.icons.images,
       to: localePath(`/${projectId}/references`)
     },
     {
       label: t('navigation.reports'),
-      icon: ui.icons.bookImage,
+      icon: ui.icons.folderOpen,
       to: localePath(`/${projectId}/reports`)
+    },
+    {
+      label: t('navigation.backups'),
+      icon: ui.icons.folderArchive,
+      to: localePath(`/${projectId}/backups`)
     }
   ]
 

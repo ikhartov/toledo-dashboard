@@ -1,8 +1,15 @@
 import type { H3Error } from 'h3'
 
-export type ServerError = Partial<H3Error>
+export enum EnvironmentType {
+  STAGING = 'staging',
+  DEVELOPMENT = 'development'
+}
+
+export type ServerCommonResponse = Partial<H3Error>
 
 export type Locale = 'en'
+
+type ReportStatus = 'passed' | 'failed' | 'pending' | 'crashed' | 'error' | 'unknown'
 
 export type Observer<T> = {
   [key: number | string]: T
@@ -11,6 +18,23 @@ export type Observer<T> = {
 export type FormatedBytes = {
   bytes: number
   text: string
+}
+
+export interface ReferenceRequestBody {
+  scenarios?: string[]
+  userName?: string
+}
+
+export interface Application {
+  id?: string
+  environment?: EnvironmentType
+  name?: string
+  url?: string
+  isDynamic?: boolean
+  version?: {
+    tag?: string
+    pipeline?: string
+  }
 }
 
 export interface DiskSpace<T> {
@@ -22,12 +46,6 @@ export interface DiskSpace<T> {
     scenarios?: T
   }
   used?: T
-}
-
-export interface Environment {
-  id: string
-  name?: string
-  url?: string
 }
 
 export interface ObservableObj {
@@ -44,17 +62,29 @@ export interface ProjectConfig {
   mockUrl?: string
 }
 
-export interface Report {
-  name: string
-  status?: 'failed' | 'passed' | 'pending'
+export interface Report<T = FormatedBytes> {
+  id: string
+  environment: string
+  pipeline?: string
+  branchName: string
+  createDate: string
+  isDynamic?: boolean
+  size?: T
   result: {
-    passed: number
-    failed: number
+    status: ReportStatus
+    count?: number
+    passed?: number
+    failed?: number
+    broken?: number
   }
 }
 
 export interface Scenario {
   label: string
   url: string
-  [k: string]: unknown
+}
+
+export interface Settings {
+  misMatchThreshold: number
+  repoUrl: string
 }

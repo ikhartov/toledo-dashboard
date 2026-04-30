@@ -3,6 +3,7 @@ import { throwError } from '~~/server/helpers/throwError'
 export default defineEventHandler(async (event): Promise<void> => {
   try {
     const projectId = getRouterParam(event, 'project')
+
     if (!projectId) {
       throwError('projectId is not defined', 'GET_PROJECT_ERROR')
       return
@@ -10,7 +11,7 @@ export default defineEventHandler(async (event): Promise<void> => {
 
     const body = await readBody(event)
 
-    return await $fetch(`/_${projectId}/api/start-test-select-scenarios`, {
+    return await $fetch(`/_${projectId}/api/action/start`, {
       method: 'post',
       headers: {
         'Content-Type': 'application/json',

@@ -2,7 +2,15 @@ import { getNitroRouteRules } from './config'
 
 // https://nuxt.com/docs/api/configuration/nuxt-config
 export default defineNuxtConfig({
-  modules: ['@pinia/nuxt', '@nuxtjs/i18n', '@nuxt/ui', '@nuxt/image', '@nuxtjs/google-fonts', 'nuxt-auth-utils', '@nuxt/eslint'],
+  modules: [
+    '@pinia/nuxt',
+    '@nuxtjs/i18n',
+    '@nuxt/ui',
+    '@nuxt/image',
+    '@nuxtjs/google-fonts',
+    'nuxt-auth-utils',
+    '@nuxt/eslint'
+  ],
   ssr: process.env.SSR_ENABLE === 'true',
   devtools: { enabled: process.env.DEVTOOLS === 'true' },
   css: ['~/assets/css/tailwind.css'],

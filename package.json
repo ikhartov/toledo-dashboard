@@ -17,28 +17,28 @@
     "lintfix": "eslint . --fix && prettier --write --list-different ."
   },
   "devDependencies": {
-    "@nuxt/eslint": "^1.12.1",
-    "@types/node": "^22.19.0",
-    "eslint": "^9.39.2",
+    "@nuxt/eslint": "^1.15.2",
+    "@types/node": "^25.6.0",
+    "eslint": "^10.2.1",
     "eslint-config-prettier": "^10.1.8",
-    "eslint-plugin-prettier": "^5.5.4",
-    "prettier": "^3.7.4",
-    "vue-tsc": "^3.2.1"
+    "eslint-plugin-prettier": "^5.5.5",
+    "prettier": "^3.8.3",
+    "vue-tsc": "^3.2.7"
   },
   "dependencies": {
-    "@iconify-json/lucide": "^1.2.82",
-    "@nuxt/ui": "^4.3.0",
+    "@iconify-json/lucide": "^1.2.104",
     "@nuxt/image": "^2.0.0",
+    "@nuxt/ui": "^4.7.0",
     "@nuxtjs/google-fonts": "^3.2.0",
-    "@nuxtjs/i18n": "^10.2.1",
+    "@nuxtjs/i18n": "^10.3.0",
     "@pinia/nuxt": "0.11.2",
-    "nuxt": "^4.2.2",
-    "nuxt-auth-utils": "^0.5.26",
+    "nuxt": "^4.4.2",
+    "nuxt-auth-utils": "^0.5.29",
     "pinia": "^3.0.4",
-    "tailwindcss": "^4.1.18",
-    "typescript": "^5.9.3",
-    "vue": "^3.5.26",
-    "vue-router": "^4.6.4"
+    "tailwindcss": "^4.2.4",
+    "typescript": "^6.0.3",
+    "vue": "^3.5.33",
+    "vue-router": "^5.0.6"
   },
   "packageManager": "pnpm@10.17.0"
 }
