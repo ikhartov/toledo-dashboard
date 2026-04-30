@@ -17,6 +17,7 @@ const route = useRoute()
 const { applications } = storeToRefs(useApplicationsStore())
 const { globalMismatchThreshold } = storeToRefs(useConfigStore())
 const { reports } = storeToRefs(useReportsStore())
+const { refreshReports } = useReportsStore()
 const { showErrorMessage, showSuccessMessage } = useNotifications()
 const { user } = useCurrentUser()
 
@@ -41,8 +42,10 @@ async function handleStartTest() {
     })
     showSuccessMessage(t('notifications.tests.start'), selectedApp.value?.name)
     toggleStartTestModal()
+    await refreshReports()
   } catch (error) {
     showErrorMessage(error)
+    await refreshReports()
   }
 }
 

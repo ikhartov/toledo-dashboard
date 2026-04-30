@@ -23,6 +23,7 @@ const { t } = useI18n()
 const { ui } = useAppConfig()
 const route = useRoute()
 const { showErrorMessage, showSuccessMessage } = useNotifications()
+const { refreshReports } = useReportsStore()
 const { dynamicAppsList, persistentAppsList } = storeToRefs(useApplicationsStore())
 const { mockUrl, globalMismatchThreshold } = storeToRefs(useConfigStore())
 const { user } = useCurrentUser()
@@ -113,8 +114,10 @@ async function handleStartTest() {
     })
     showSuccessMessage(t('notifications.tests.start'))
     toggleStartTestModal(true)
+    await refreshReports()
   } catch (error) {
     showErrorMessage(error)
+    await refreshReports()
   }
 }
 
