@@ -15,9 +15,10 @@ const { t } = useI18n()
 const { ui } = useAppConfig()
 const route = useRoute()
 const { applications } = storeToRefs(useApplicationsStore())
-const { globalMismatchThreshold } = storeToRefs(useConfigStore())
+const { globalMismatchThreshold } = storeToRefs(useSettingsStore())
 const { reports } = storeToRefs(useReportsStore())
 const { refreshReports } = useReportsStore()
+const { refreshApps } = useApplicationsStore()
 const { showErrorMessage, showSuccessMessage } = useNotifications()
 const { user } = useCurrentUser()
 
@@ -91,10 +92,13 @@ const columns: TableColumn<Application>[] = [
   {
     id: 'actions',
     cell: ({ row }) => {
-      const report = reports.value.find((r) => {
+      const appReports = reports.value.filter((r) => {
         const { pipeline } = row.getValue('version') as NonNullable<Application['version']>
         return (r.pipeline && pipeline?.includes(r.pipeline)) || row.original.name?.includes(r.branchName)
       })
+      const dates = appReports.map((r) => new Date(r.createDate).getTime())
+      const report = appReports.find((r) => new Date(r.createDate).getTime() === Math.max(...dates))
+
       return h('div', { class: 'flex flex-wrap gap-4 lg:gap-6 justify-between sm:justify-end' }, [
         report
           ? h(UButton, {
@@ -129,6 +133,7 @@ const columns: TableColumn<Application>[] = [
               :placeholder="t('global.filter')"
               @update:model-value="table?.tableApi?.getColumn('name')?.setFilterValue($event)"
             />
+            <UButton :label="t('actions.refreshApps')" :icon="ui.icons.reload" variant="ghost" @click="refreshApps" />
           </div>
         </template>
         <UTable

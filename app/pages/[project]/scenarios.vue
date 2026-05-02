@@ -25,7 +25,9 @@ const route = useRoute()
 const { showErrorMessage, showSuccessMessage } = useNotifications()
 const { refreshReports } = useReportsStore()
 const { dynamicAppsList, persistentAppsList } = storeToRefs(useApplicationsStore())
-const { mockUrl, globalMismatchThreshold } = storeToRefs(useConfigStore())
+const { refreshApps } = useApplicationsStore()
+const { mockUrl } = storeToRefs(useConfigStore())
+const { globalMismatchThreshold } = storeToRefs(useSettingsStore())
 const { user } = useCurrentUser()
 
 const { data: scenariosData, error: scenariosError } = await useFetch<Scenario[]>(
@@ -327,7 +329,17 @@ const columns: TableColumn<Scenario>[] = [
           :groups="getApplicationsInfo()"
           :placeholder="t('modal.startSelectedTest.searchPlaceholder')"
           class="max-h-64"
-        />
+        >
+          <template #close>
+            <UButton
+              :icon="ui.icons.reload"
+              :title="t('modal.startSelectedTest.refresh')"
+              color="neutral"
+              variant="ghost"
+              @click="refreshApps()"
+            />
+          </template>
+        </UCommandPalette>
       </template>
       <template #footer>
         <UButton

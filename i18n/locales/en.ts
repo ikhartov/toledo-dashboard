@@ -9,6 +9,7 @@ export default {
     delete: 'Delete',
     deleteSelected: 'Delete reports',
     open: 'Open',
+    refreshApps: 'Refresh Apps',
     showReport: 'Show report',
     startSelectedTest: 'Start selected test | Start selected tests',
     startTest: 'Start test'
@@ -79,6 +80,7 @@ export default {
       headline: 'Choose application',
       misMatchThreshold: 'Mismatch threshold',
       misMatchThresholdPlaceholder: 'Set mismatch threshold',
+      refresh: 'Refresh application list',
       searchPlaceholder: 'Search applications...',
       title: 'Start selected test | Start selected tests'
     },

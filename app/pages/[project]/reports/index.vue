@@ -35,7 +35,10 @@ const selectedRows = ref<Record<string, boolean | undefined>>({})
 const tableRef = useTemplateRef('tableRef')
 const columnFilters = ref([{ id: 'branchName', value: '' }])
 const rowSelection = ref({})
-const sorting = ref([{ id: 'branchName', desc: false }])
+const sorting = ref([
+  { id: 'branchName', desc: false },
+  { id: 'createDate', desc: false }
+])
 
 const isRowsSelected = computed(() => Object.keys(selectedRows.value).length)
 
@@ -377,6 +380,7 @@ const columns: TableColumn<Report>[] = [
           v-model:column-filters="columnFilters"
           v-model:row-selection="rowSelection"
           v-model:sorting="sorting"
+          :sorting-options="{ enableMultiSort: true }"
           class="border-t border-accented"
           :columns="columns"
           :data="reports"
