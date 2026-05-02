@@ -7,7 +7,7 @@ export const useNavigationStore = defineStore('navigation', () => {
   const { user, logout } = useCurrentUser()
   const { projectsList } = storeToRefs(useConfigStore())
   const colorMode = useColorMode()
-  const route = useRoute()
+  const { currentRoute } = useRouter()
 
   const colors = [
     'red',
@@ -199,7 +199,7 @@ export const useNavigationStore = defineStore('navigation', () => {
     return projectsList.value.map((project) => ({
       ...project,
       defaultOpen: true,
-      active: project.id === route.params.project,
+      active: project.id === currentRoute.value.params.project,
       children: getProjectNavigation(project.id)
     }))
   })
