@@ -13,7 +13,7 @@ const ULink = resolveComponent('ULink')
 const { t } = useI18n()
 const { ui } = useAppConfig()
 const route = useRoute()
-const { createReferences, startTest } = useActions()
+const { createReferences, startTest, isActionCreate, isActionStart } = useActions()
 const { showErrorMessage } = useNotifications()
 const { isReferenceJobRunning, jobsStatus } = storeToRefs(useJobsStore())
 const { refreshJobsStatus } = useJobsStore()
@@ -307,7 +307,13 @@ const columns: TableColumn<JobStatus>[] = [
         </UCommandPalette>
       </template>
       <template #footer>
-        <UButton color="primary" :label="t(`actions.startTest`)" @click="handleStartTest" />
+        <UButton
+          color="primary"
+          :label="t(`actions.startTest`)"
+          :disabled="isActionStart"
+          :loading="isActionStart"
+          @click="handleStartTest"
+        />
         <UButton color="neutral" variant="outline" :label="t('actions.cancel')" @click="toggleStartTestModal" />
       </template>
     </UModal>
@@ -320,7 +326,13 @@ const columns: TableColumn<JobStatus>[] = [
         <span>{{ t('modal.createReference.common') }}</span>
       </template>
       <template #footer>
-        <UButton color="primary" :label="t(`actions.createReference`, 2)" @click="handleCreateReferences" />
+        <UButton
+          color="primary"
+          :label="t(`actions.createReference`, 2)"
+          :disabled="isActionCreate"
+          :loading="isActionCreate"
+          @click="handleCreateReferences"
+        />
         <UButton color="neutral" variant="outline" :label="t('actions.cancel')" @click="toggleCreateReferenceModal" />
       </template>
     </UModal>

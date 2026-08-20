@@ -63,6 +63,5 @@ export default defineNuxtConfig({
         dir: './app/assets/icons'
       }
     ]
-  },
-  pinia: { storesDirs: ['./app/stores/**'] }
+  }
 })

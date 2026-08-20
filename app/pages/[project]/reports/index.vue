@@ -18,9 +18,8 @@ const route = useRoute()
 const { reports } = storeToRefs(useReportsStore())
 const { refreshReports } = useReportsStore()
 const { showErrorMessage } = useNotifications()
-const { backupReports, deleteReports } = useActions()
+const { backupReports, deleteReports, isActionBackup, isActionDelete } = useActions()
 
-const loading = ref(false)
 const backupModel = ref<Report>()
 const deleteModel = ref<Report>()
 const modal = reactive({
@@ -79,10 +78,8 @@ async function handleDeleteReport() {
     return
   }
 
-  loading.value = true
   await deleteReports({ folders: [deleteModel.value?.id], type: 'reports' })
   await refreshReports()
-  loading.value = false
   toggleDeleteModal()
 }
 
@@ -92,7 +89,6 @@ async function handleDeleteReports() {
     return
   }
 
-  loading.value = true
   await deleteReports({
     folders: Object.entries(selectedRows.value)
       .filter(([_, value]) => value)
@@ -100,7 +96,6 @@ async function handleDeleteReports() {
     type: 'reports'
   })
   await refreshReports()
-  loading.value = false
   toggleDeleteSelected(true)
 }
 
@@ -110,9 +105,7 @@ async function handleBackupReport() {
     return
   }
 
-  loading.value = true
   await backupReports({ folders: [backupModel.value?.id] })
-  loading.value = false
   toggleBackupModal()
 }
 
@@ -122,13 +115,11 @@ async function handleBackupReports() {
     return
   }
 
-  loading.value = true
   await backupReports({
     folders: Object.entries(selectedRows.value)
       .filter(([_, value]) => value)
       .map(([key]) => key)
   })
-  loading.value = false
   toggleBackupSelected(true)
 }
 
@@ -377,7 +368,13 @@ const columns: TableColumn<Report>[] = [
         </UPageCard>
       </template>
       <template #footer>
-        <UButton color="error" :label="t('actions.delete')" :loading="loading" @click="handleDeleteReport" />
+        <UButton
+          color="error"
+          :label="t('actions.delete')"
+          :disabled="isActionDelete"
+          :loading="isActionDelete"
+          @click="handleDeleteReport"
+        />
         <UButton color="neutral" variant="outline" :label="t('actions.cancel')" @click="() => toggleDeleteModal()" />
       </template>
     </UModal>
@@ -398,7 +395,13 @@ const columns: TableColumn<Report>[] = [
         </UScrollArea>
       </template>
       <template #footer>
-        <UButton color="error" :label="t('actions.delete')" :loading="loading" @click="handleDeleteReports" />
+        <UButton
+          color="error"
+          :label="t('actions.delete')"
+          :disabled="isActionDelete"
+          :loading="isActionDelete"
+          @click="handleDeleteReports"
+        />
         <UButton color="neutral" variant="outline" :label="t('actions.cancel')" @click="() => toggleDeleteSelected()" />
       </template>
     </UModal>
@@ -426,7 +429,13 @@ const columns: TableColumn<Report>[] = [
         </UPageCard>
       </template>
       <template #footer>
-        <UButton color="primary" :label="t('actions.backup')" :loading="loading" @click="handleBackupReport" />
+        <UButton
+          color="primary"
+          :label="t('actions.backup')"
+          :disabled="isActionBackup"
+          :loading="isActionBackup"
+          @click="handleBackupReport"
+        />
         <UButton color="neutral" variant="outline" :label="t('actions.cancel')" @click="() => toggleBackupModal()" />
       </template>
     </UModal>
@@ -447,7 +456,13 @@ const columns: TableColumn<Report>[] = [
         </UScrollArea>
       </template>
       <template #footer>
-        <UButton color="primary" :label="t('actions.backup')" :loading="loading" @click="handleBackupReports" />
+        <UButton
+          color="primary"
+          :label="t('actions.backup')"
+          :disabled="isActionBackup"
+          :loading="isActionBackup"
+          @click="handleBackupReports"
+        />
         <UButton color="neutral" variant="outline" :label="t('actions.cancel')" @click="() => toggleBackupSelected()" />
       </template>
     </UModal>

@@ -17,7 +17,7 @@ const UCheckbox = resolveComponent('UCheckbox')
 const { t } = useI18n()
 const { ui } = useAppConfig()
 const route = useRoute()
-const { createReferences, startTest } = useActions()
+const { createReferences, startTest, isActionCreate, isActionStart } = useActions()
 const { showErrorMessage } = useNotifications()
 const { dynamicAppsList, persistentAppsList } = storeToRefs(useApplicationsStore())
 const { refreshApps } = useApplicationsStore()
@@ -331,6 +331,8 @@ const columns: TableColumn<Scenario>[] = [
         <UButton
           color="primary"
           :label="t(`actions.startSelectedTest`, Object.keys(selectedRows).length)"
+          :disabled="isActionStart"
+          :loading="isActionStart"
           @click="handleStartTest"
         />
         <UButton color="neutral" variant="outline" :label="t('actions.cancel')" @click="() => toggleStartTestModal()" />
@@ -360,6 +362,8 @@ const columns: TableColumn<Scenario>[] = [
         <UButton
           color="primary"
           :label="t(`actions.createReference`, Object.keys(selectedRows).length)"
+          :disabled="isActionCreate"
+          :loading="isActionCreate"
           @click="handleCreateReferences"
         />
         <UButton

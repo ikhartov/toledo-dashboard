@@ -16,7 +16,7 @@ const { t } = useI18n()
 const { ui } = useAppConfig()
 const route = useRoute()
 const { showErrorMessage } = useNotifications()
-const { deleteReports } = useActions()
+const { deleteReports, isActionDelete } = useActions()
 
 const {
   data: backups,
@@ -30,7 +30,6 @@ if (backupsError.value) {
   showErrorMessage(backupsError.value)
 }
 
-const loading = ref(false)
 const deleteModel = ref<Report>()
 const modal = reactive({
   bulkDelete: false,
@@ -70,10 +69,8 @@ async function deleteBackupReport() {
     return
   }
 
-  loading.value = true
   await deleteReports({ folders: [deleteModel.value.id], type: 'backups' })
   await refreshBackups()
-  loading.value = false
   toggleDeleteModal()
 }
 
@@ -83,7 +80,6 @@ async function deleteBackupReports() {
     return
   }
 
-  loading.value = true
   await deleteReports({
     folders: Object.entries(selectedRows.value)
       .filter(([_, value]) => value)
@@ -91,7 +87,6 @@ async function deleteBackupReports() {
     type: 'backups'
   })
   await refreshBackups()
-  loading.value = false
   toggleDeleteSelected(true)
 }
 
@@ -328,7 +323,13 @@ const columns: TableColumn<Report>[] = [
         </UPageCard>
       </template>
       <template #footer>
-        <UButton color="error" :label="t('actions.delete')" :loading="loading" @click="deleteBackupReport" />
+        <UButton
+          color="error"
+          :label="t('actions.delete')"
+          :disabled="isActionDelete"
+          :loading="isActionDelete"
+          @click="deleteBackupReport"
+        />
         <UButton color="neutral" variant="outline" :label="t('actions.cancel')" @click="() => toggleDeleteModal()" />
       </template>
     </UModal>
@@ -349,7 +350,13 @@ const columns: TableColumn<Report>[] = [
         </UScrollArea>
       </template>
       <template #footer>
-        <UButton color="error" :label="t('actions.delete')" :loading="loading" @click="deleteBackupReports" />
+        <UButton
+          color="error"
+          :label="t('actions.delete')"
+          :disabled="isActionDelete"
+          :loading="isActionDelete"
+          @click="deleteBackupReports"
+        />
         <UButton color="neutral" variant="outline" :label="t('actions.cancel')" @click="() => toggleDeleteSelected()" />
       </template>
     </UModal>
