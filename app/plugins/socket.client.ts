@@ -4,8 +4,9 @@ import type { ApplicationEvents, JobStatusMessage } from '~~/shared/types'
 export default defineNuxtPlugin((nuxtApp) => {
   const $bus = nuxtApp.$bus as Emitter<ApplicationEvents>
   const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:'
+  const pinia = nuxtApp.$pinia
   const { userId } = useCurrentUser()
-  const configStore = useConfigStore()
+  const configStore = useConfigStore(pinia)
 
   const reconnectBaseDelay = 1000
   const reconnectMaxDelay = 30000
