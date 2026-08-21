@@ -266,7 +266,7 @@ const columns: TableColumn<Report>[] = [
   {
     accessorKey: 'createdBy',
     header: t('reports.columns.createdBy'),
-    cell: ({ row }) => row.getValue('createdBy') ? row.getValue('createdBy') : ''
+    cell: ({ row }) => (row.getValue('createdBy') ? row.getValue('createdBy') : '')
   },
   {
     id: 'size_text',
