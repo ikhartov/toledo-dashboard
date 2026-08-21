@@ -51,7 +51,7 @@ export default {
   },
   global: {
     appName: 'ToledoDashboard',
-    filter: 'Filter by name',
+    filter: 'Filter...',
     title: 'Toledo Dashboard'
   },
   home: {
@@ -157,6 +157,7 @@ export default {
     columns: {
       branchName: 'Branch name',
       createDate: 'Created',
+      createdBy: 'Created by',
       environment: 'Environment',
       id: 'ID',
       isDynamic: 'Dynamic env',

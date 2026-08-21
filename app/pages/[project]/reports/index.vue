@@ -28,11 +28,10 @@ const modal = reactive({
   bulkDelete: false,
   delete: false
 })
-
+const globalFilter = ref('')
 const selectedRows = ref<Record<string, boolean | undefined>>({})
 
 const tableRef = useTemplateRef('tableRef')
-const columnFilters = ref([{ id: 'branchName', value: '' }])
 const rowSelection = ref({})
 const sorting = ref([
   { id: 'branchName', desc: false },
@@ -254,7 +253,20 @@ const columns: TableColumn<Report>[] = [
   {
     accessorKey: 'createDate',
     header: t('reports.columns.createDate'),
-    cell: ({ row }) => getReportDate(row.getValue('createDate'))
+    cell: ({ row }) => {
+      return new Date(row.getValue('createDate')).toLocaleString('en-US', {
+        day: 'numeric',
+        month: 'short',
+        hour: '2-digit',
+        minute: '2-digit',
+        hour12: false
+      })
+    }
+  },
+  {
+    accessorKey: 'createdBy',
+    header: t('reports.columns.createdBy'),
+    cell: ({ row }) => row.getValue('createdBy') ? row.getValue('createdBy') : ''
   },
   {
     id: 'size_text',
@@ -308,12 +320,7 @@ const columns: TableColumn<Report>[] = [
       >
         <template #header>
           <div class="w-full flex flex-wrap gap-2 justify-between">
-            <UInput
-              :model-value="tableRef?.tableApi?.getColumn('branchName')?.getFilterValue() as string"
-              class="max-w-sm"
-              :placeholder="t('global.filter')"
-              @update:model-value="tableRef?.tableApi?.getColumn('branchName')?.setFilterValue($event)"
-            />
+            <UInput v-model="globalFilter" class="max-w-sm" :placeholder="t('global.filter')" />
 
             <div v-if="isRowsSelected" class="flex gap-2">
               <UButton color="secondary" variant="outline" @click="() => toggleBackupSelected()">
@@ -327,7 +334,7 @@ const columns: TableColumn<Report>[] = [
         </template>
         <UTable
           ref="tableRef"
-          v-model:column-filters="columnFilters"
+          v-model:global-filter="globalFilter"
           v-model:row-selection="rowSelection"
           v-model:sorting="sorting"
           :sorting-options="{ enableMultiSort: true }"

@@ -87,6 +87,7 @@ export interface Report<T = FormatedBytes> {
   branchName: string
   createDate: string
   isDynamic?: boolean
+  createdBy?: string
   size?: T
   result: {
     status: ReportStatus
