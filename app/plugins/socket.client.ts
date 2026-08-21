@@ -1,17 +1,17 @@
 import type { Emitter } from 'mitt'
 import type { ApplicationEvents, JobStatusMessage } from '~~/shared/types'
+import { getProjectList } from '~~/config'
 
 export default defineNuxtPlugin((nuxtApp) => {
   const $bus = nuxtApp.$bus as Emitter<ApplicationEvents>
   const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:'
-  const pinia = nuxtApp.$pinia
   const { userId } = useCurrentUser()
-  const configStore = useConfigStore(pinia)
+  const projectsList = getProjectList()
 
   const reconnectBaseDelay = 1000
   const reconnectMaxDelay = 30000
 
-  configStore.projectsList.forEach((project) => {
+  projectsList.forEach((project) => {
     let socket: WebSocket | null = null
     let reconnectAttempt = 0
     let reconnectTimeout: ReturnType<typeof setTimeout> | null = null
