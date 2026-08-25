@@ -126,8 +126,15 @@ async function handleStartTest() {
   toggleStartTestModal(true)
 }
 
-function handleFilterChange(query: string) {
-  tableRef.value?.tableApi?.getColumn('label')?.setFilterValue(query)
+async function setFilterValue(query: string) {
+  return new Promise((resolve) => {
+    tableRef.value?.tableApi?.getColumn('label')?.setFilterValue(query)
+    resolve(query)
+  })
+}
+
+async function handleFilterChange(query: string) {
+  await setFilterValue(query)
 
   const filteredRows = tableRef.value?.tableApi?.getFilteredRowModel().rows
   filteredRowsCount.value = filteredRows?.length || 0
@@ -143,11 +150,13 @@ const columns: TableColumn<Scenario>[] = [
           table.toggleAllPageRowsSelected(!!value)
 
           if (value) {
-            scenariosData.value.forEach((item) => {
-              if (item.label) {
-                selectedRows.value[item.label] = !!value
-              }
-            })
+            for (const key in rowSelection.value) {
+              scenariosData.value.forEach((item, index) => {
+                if (item.label && index === Number(key)) {
+                  selectedRows.value[item.label] = !!value
+                }
+              })
+            }
           } else {
             if (isRowsSelected.value) {
               for (const key in selectedRows.value) {

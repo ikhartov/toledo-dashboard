@@ -51,6 +51,8 @@ export default {
   },
   global: {
     appName: 'ToledoDashboard',
+    asc: 'Asc',
+    desc: 'Desc',
     filter: 'Filter...',
     title: 'Toledo Dashboard'
   },

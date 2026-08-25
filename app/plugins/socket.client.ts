@@ -1,12 +1,18 @@
-import type { Emitter } from 'mitt'
-import type { ApplicationEvents, JobStatusMessage } from '~~/shared/types'
-import { getProjectList } from '~~/config'
+// import type { Emitter } from 'mitt'
+import type { JobStatusMessage } from '~~/shared/types'
+// import { getProjectList } from '~~/config'
 
 export default defineNuxtPlugin((nuxtApp) => {
-  const $bus = nuxtApp.$bus as Emitter<ApplicationEvents>
+  // const $bus = nuxtApp.$bus as Emitter<ApplicationEvents>
+  const { $bus, $pinia } = nuxtApp
   const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:'
   const { userId } = useCurrentUser()
-  const projectsList = getProjectList()
+  const configStore = useConfigStore($pinia)
+  const projectsList = configStore.projectsList
+
+  // if (process.env.NODE_ENV !== 'development') {
+  //   projectsList = getProjectList()
+  // }
 
   const reconnectBaseDelay = 1000
   const reconnectMaxDelay = 30000
