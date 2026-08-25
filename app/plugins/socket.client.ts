@@ -100,7 +100,7 @@ export default defineNuxtPlugin({
       () => configStore.projectsList,
       (newValue, oldValue) => {
         if (oldValue && newValue.length !== oldValue?.length) {
-          connectSocket(projectsList, $bus, userId.value)
+          connectSocket(newValue, $bus, userId.value)
         }
       },
       { immediate: true }
