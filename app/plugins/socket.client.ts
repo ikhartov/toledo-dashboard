@@ -1,17 +1,20 @@
-import type { JobStatusMessage } from '~~/shared/types'
+import type { Emitter } from 'mitt'
+import type { Pinia } from 'pinia'
+import type { ApplicationEvents, JobStatusMessage } from '~~/shared/types'
 
-export default defineNuxtPlugin((nuxtApp) => {
-  const { $pinia } = nuxtApp
-  const configStore = useConfigStore($pinia)
-  const projectsList = configStore.projectsList
-
-  const reconnectBaseDelay = 1000
-  const reconnectMaxDelay = 30000
-
-  if (!import.meta.server) {
-    const { $bus } = nuxtApp
+export default defineNuxtPlugin({
+  name: 'socket',
+  enforce: 'post',
+  setup(nuxtApp) {
+    const $bus = nuxtApp.$bus as Emitter<ApplicationEvents>
+    const $pinia = nuxtApp.$pinia as Pinia
+    const configStore = useConfigStore($pinia as Pinia)
+    const projectsList = configStore.projectsList
     const protocol = window.location.protocol === 'https:' || process.env.NODE_ENV !== 'development' ? 'wss:' : 'ws:'
     const { userId } = useCurrentUser()
+
+    const reconnectBaseDelay = 1000
+    const reconnectMaxDelay = 30000
 
     projectsList.forEach((project) => {
       let socket: WebSocket | null = null
