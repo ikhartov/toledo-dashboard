@@ -1,10 +1,12 @@
 <script setup lang="ts">
-import type { JobStatusEvents } from '~~/shared/types'
+import type { Emitter } from 'mitt'
+import type { ApplicationEvents, JobStatusEvents } from '~~/shared/types'
 
 const { getProjectNavigation } = useNavigationStore()
 
 const { t } = useI18n()
-const { $bus } = useNuxtApp()
+const nuxtApp = useNuxtApp()
+const $bus = nuxtApp.$bus as Emitter<ApplicationEvents>
 const route = useRoute()
 const { projectsList } = storeToRefs(useConfigStore())
 const { showErrorMessage, showSuccessMessage } = useNotifications()

@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { h, resolveComponent } from 'vue'
 import type { TableColumn } from '@nuxt/ui'
+import type { Column } from '@tanstack/vue-table'
 import type { FormatedBytes, Report } from '~~/shared/types'
 
 definePageMeta({
@@ -11,12 +12,13 @@ definePageMeta({
 const UBadge = resolveComponent('UBadge')
 const UButton = resolveComponent('UButton')
 const UCheckbox = resolveComponent('UCheckbox')
+const UDropdownMenu = resolveComponent('UDropdownMenu')
 
 const { t } = useI18n()
 const { ui } = useAppConfig()
 const route = useRoute()
 const { showErrorMessage } = useNotifications()
-const { deleteReports } = useActions()
+const { deleteReports, isActionDelete } = useActions()
 
 const {
   data: backups,
@@ -30,7 +32,6 @@ if (backupsError.value) {
   showErrorMessage(backupsError.value)
 }
 
-const loading = ref(false)
 const deleteModel = ref<Report>()
 const modal = reactive({
   bulkDelete: false,
@@ -70,10 +71,8 @@ async function deleteBackupReport() {
     return
   }
 
-  loading.value = true
   await deleteReports({ folders: [deleteModel.value.id], type: 'backups' })
   await refreshBackups()
-  loading.value = false
   toggleDeleteModal()
 }
 
@@ -83,7 +82,6 @@ async function deleteBackupReports() {
     return
   }
 
-  loading.value = true
   await deleteReports({
     folders: Object.entries(selectedRows.value)
       .filter(([_, value]) => value)
@@ -91,8 +89,61 @@ async function deleteBackupReports() {
     type: 'backups'
   })
   await refreshBackups()
-  loading.value = false
   toggleDeleteSelected(true)
+}
+
+function getHeader(column: Column<Report>, label: string) {
+  const isSorted = column.getIsSorted()
+
+  return h(
+    UDropdownMenu,
+    {
+      content: {
+        align: 'start'
+      },
+      items: [
+        {
+          label: t('global.asc'),
+          type: 'checkbox',
+          icon: ui.icons.arrowNarrowUp,
+          checked: isSorted === 'asc',
+          onSelect: () => {
+            if (isSorted === 'asc') {
+              column.clearSorting()
+            } else {
+              column.toggleSorting(false)
+            }
+          }
+        },
+        {
+          label: t('global.desc'),
+          icon: ui.icons.arrowNarrowDown,
+          type: 'checkbox',
+          checked: isSorted === 'desc',
+          onSelect: () => {
+            if (isSorted === 'desc') {
+              column.clearSorting()
+            } else {
+              column.toggleSorting(true)
+            }
+          }
+        }
+      ]
+    },
+    () =>
+      h(UButton, {
+        color: 'neutral',
+        variant: 'ghost',
+        label,
+        icon: isSorted
+          ? isSorted === 'asc'
+            ? ui.icons.arrowNarrowUp
+            : ui.icons.arrowNarrowDown
+          : ui.icons.arrowUpDown,
+        class: '-mx-2.5 data-[state=open]:bg-elevated'
+        // onClick: () => column.toggleSorting(column.getIsSorted() === 'asc')
+      })
+  )
 }
 
 function getReportDate(createDate: string) {
@@ -171,9 +222,13 @@ const columns: TableColumn<Report>[] = [
         'onUpdate:modelValue': (value: boolean | 'indeterminate') => {
           table.toggleAllPageRowsSelected(!!value)
           if (value) {
-            backups.value.forEach((item) => {
-              selectedRows.value[item.id] = !!value
-            })
+            for (const key in rowSelection.value) {
+              backups.value.forEach((item, index) => {
+                if (index === Number(key)) {
+                  selectedRows.value[item.id] = !!value
+                }
+              })
+            }
           } else {
             if (Object.keys(selectedRows.value).length) {
               for (const key in selectedRows.value) {
@@ -201,30 +256,20 @@ const columns: TableColumn<Report>[] = [
   {
     id: 'branchName',
     accessorKey: 'branchName',
-    header: ({ column }) => {
-      const isSorted = column.getIsSorted()
-
-      return h(UButton, {
-        color: 'neutral',
-        variant: 'ghost',
-        label: t('reports.columns.branchName'),
-        icon: isSorted
-          ? isSorted === 'asc'
-            ? ui.icons.arrowNarrowUp
-            : ui.icons.arrowNarrowDown
-          : ui.icons.arrowUpDown,
-        class: '-mx-2.5',
-        onClick: () => column.toggleSorting(column.getIsSorted() === 'asc')
-      })
-    },
+    header: ({ column }) => getHeader(column, t('reports.columns.branchName')),
     cell: ({ row }) => {
       return h('span', { class: 'font-semibold' }, `${row.getValue('branchName')}`)
     }
   },
   {
     accessorKey: 'createDate',
-    header: t('reports.columns.createDate'),
+    header: ({ column }) => getHeader(column, t('reports.columns.createDate')),
     cell: ({ row }) => getReportDate(row.getValue('createDate'))
+  },
+  {
+    accessorKey: 'createdBy',
+    header: ({ column }) => getHeader(column, t('reports.columns.createdBy')),
+    cell: ({ row }) => (row.getValue('createdBy') ? row.getValue('createdBy') : '')
   },
   {
     id: 'size_text',
@@ -328,7 +373,13 @@ const columns: TableColumn<Report>[] = [
         </UPageCard>
       </template>
       <template #footer>
-        <UButton color="error" :label="t('actions.delete')" :loading="loading" @click="deleteBackupReport" />
+        <UButton
+          color="error"
+          :label="t('actions.delete')"
+          :disabled="isActionDelete"
+          :loading="isActionDelete"
+          @click="deleteBackupReport"
+        />
         <UButton color="neutral" variant="outline" :label="t('actions.cancel')" @click="() => toggleDeleteModal()" />
       </template>
     </UModal>
@@ -349,7 +400,13 @@ const columns: TableColumn<Report>[] = [
         </UScrollArea>
       </template>
       <template #footer>
-        <UButton color="error" :label="t('actions.delete')" :loading="loading" @click="deleteBackupReports" />
+        <UButton
+          color="error"
+          :label="t('actions.delete')"
+          :disabled="isActionDelete"
+          :loading="isActionDelete"
+          @click="deleteBackupReports"
+        />
         <UButton color="neutral" variant="outline" :label="t('actions.cancel')" @click="() => toggleDeleteSelected()" />
       </template>
     </UModal>

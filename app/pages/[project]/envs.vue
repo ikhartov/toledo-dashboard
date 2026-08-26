@@ -19,7 +19,7 @@ const { applications } = storeToRefs(useApplicationsStore())
 const { globalMismatchThreshold } = storeToRefs(useSettingsStore())
 const { reports } = storeToRefs(useReportsStore())
 const { refreshApps } = useApplicationsStore()
-const { startTest } = useActions()
+const { startTest, isActionStart } = useActions()
 const { userId, userName } = useCurrentUser()
 const { isReferenceJobRunning } = storeToRefs(useJobsStore())
 
@@ -162,7 +162,13 @@ const columns: TableColumn<Application>[] = [
         </UFormField>
       </template>
       <template #footer>
-        <UButton color="primary" :label="t(`actions.startTest`)" @click="handleStartTest()" />
+        <UButton
+          color="primary"
+          :label="t(`actions.startTest`)"
+          :disabled="isActionStart"
+          :loading="isActionStart"
+          @click="handleStartTest"
+        />
         <UButton color="neutral" variant="outline" :label="t('actions.cancel')" @click="() => toggleStartTestModal()" />
       </template>
     </UModal>

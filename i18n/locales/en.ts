@@ -51,7 +51,9 @@ export default {
   },
   global: {
     appName: 'ToledoDashboard',
-    filter: 'Filter by name',
+    asc: 'Asc',
+    desc: 'Desc',
+    filter: 'Filter...',
     title: 'Toledo Dashboard'
   },
   home: {
@@ -104,6 +106,9 @@ export default {
         }
       },
       description: 'Config parameters for test',
+      errors: {
+        app: 'Select an application for testing'
+      },
       headline: 'Choose application',
       misMatchThreshold: 'Mismatch threshold',
       misMatchThresholdPlaceholder: 'Set mismatch threshold',
@@ -157,6 +162,7 @@ export default {
     columns: {
       branchName: 'Branch name',
       createDate: 'Created',
+      createdBy: 'Created by',
       environment: 'Environment',
       id: 'ID',
       isDynamic: 'Dynamic env',

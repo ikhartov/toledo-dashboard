@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { h, resolveComponent } from 'vue'
 import type { Scenario, SelectedApp } from '~~/shared/types'
-import type { TableColumn, CommandPaletteGroup } from '@nuxt/ui'
+import type { TableColumn, CommandPaletteGroup, CommandPaletteItem } from '@nuxt/ui'
 
 type SelectedRows = Record<string, boolean | undefined>
 
@@ -17,7 +17,7 @@ const UCheckbox = resolveComponent('UCheckbox')
 const { t } = useI18n()
 const { ui } = useAppConfig()
 const route = useRoute()
-const { createReferences, startTest } = useActions()
+const { createReferences, startTest, isActionCreate, isActionStart } = useActions()
 const { showErrorMessage } = useNotifications()
 const { dynamicAppsList, persistentAppsList } = storeToRefs(useApplicationsStore())
 const { refreshApps } = useApplicationsStore()
@@ -42,6 +42,7 @@ const modal = reactive({
 const searchQuery = ref('')
 const selectedRows = ref<SelectedRows>({})
 const selectedApp = ref<SelectedApp | null>(null)
+const showSelectedAppError = ref(false)
 const misMatchThreshold = ref(globalMismatchThreshold.value)
 const tableRef = useTemplateRef('tableRef')
 const columnFilters = ref([{ id: 'label', value: '' }])
@@ -102,6 +103,15 @@ function getApplicationsInfo(): CommandPaletteGroup[] {
   ]
 }
 
+function handleShowAppError(payload?: CommandPaletteItem) {
+  if (!payload) {
+    showSelectedAppError.value = true
+    return
+  }
+
+  showSelectedAppError.value = false
+}
+
 async function handleCreateReferences() {
   await createReferences({
     scenarios: Object.entries(selectedRows.value)
@@ -114,6 +124,11 @@ async function handleCreateReferences() {
 }
 
 async function handleStartTest() {
+  if (!selectedApp.value) {
+    handleShowAppError()
+    return
+  }
+
   await startTest({
     application: selectedApp.value?.app,
     misMatchThreshold: misMatchThreshold.value,
@@ -126,8 +141,15 @@ async function handleStartTest() {
   toggleStartTestModal(true)
 }
 
-function handleFilterChange(query: string) {
-  tableRef.value?.tableApi?.getColumn('label')?.setFilterValue(query)
+async function setFilterValue(query: string) {
+  return new Promise((resolve) => {
+    tableRef.value?.tableApi?.getColumn('label')?.setFilterValue(query)
+    resolve(query)
+  })
+}
+
+async function handleFilterChange(query: string) {
+  await setFilterValue(query)
 
   const filteredRows = tableRef.value?.tableApi?.getFilteredRowModel().rows
   filteredRowsCount.value = filteredRows?.length || 0
@@ -143,11 +165,13 @@ const columns: TableColumn<Scenario>[] = [
           table.toggleAllPageRowsSelected(!!value)
 
           if (value) {
-            scenariosData.value.forEach((item) => {
-              if (item.label) {
-                selectedRows.value[item.label] = !!value
-              }
-            })
+            for (const key in rowSelection.value) {
+              scenariosData.value.forEach((item, index) => {
+                if (item.label && index === Number(key)) {
+                  selectedRows.value[item.label] = !!value
+                }
+              })
+            }
           } else {
             if (isRowsSelected.value) {
               for (const key in selectedRows.value) {
@@ -309,12 +333,20 @@ const columns: TableColumn<Scenario>[] = [
         </UFormField>
         <USeparator class="my-4" />
         <UPageHeader :headline="t('modal.startSelectedTest.headline')" :ui="{ root: 'py-0', headline: 'mb-2' }" />
+        <UAlert
+          v-if="showSelectedAppError"
+          color="error"
+          variant="subtle"
+          :description="t('modal.startSelectedTest.errors.app')"
+          :icon="ui.icons.warning"
+        />
         <UCommandPalette
           v-model:search-term="searchQuery"
           v-model="selectedApp"
           :groups="getApplicationsInfo()"
           :placeholder="t('modal.startSelectedTest.searchPlaceholder')"
           class="max-h-64"
+          @update:model-value="handleShowAppError"
         >
           <template #close>
             <UButton
@@ -331,6 +363,8 @@ const columns: TableColumn<Scenario>[] = [
         <UButton
           color="primary"
           :label="t(`actions.startSelectedTest`, Object.keys(selectedRows).length)"
+          :disabled="isActionStart"
+          :loading="isActionStart"
           @click="handleStartTest"
         />
         <UButton color="neutral" variant="outline" :label="t('actions.cancel')" @click="() => toggleStartTestModal()" />
@@ -360,6 +394,8 @@ const columns: TableColumn<Scenario>[] = [
         <UButton
           color="primary"
           :label="t(`actions.createReference`, Object.keys(selectedRows).length)"
+          :disabled="isActionCreate"
+          :loading="isActionCreate"
           @click="handleCreateReferences"
         />
         <UButton

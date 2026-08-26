@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { h, resolveComponent } from 'vue'
 import type { TableColumn } from '@nuxt/ui'
+import type { Column } from '@tanstack/vue-table'
 import type { FormatedBytes, Report } from '~~/shared/types'
 
 definePageMeta({
@@ -11,6 +12,7 @@ definePageMeta({
 const UBadge = resolveComponent('UBadge')
 const UButton = resolveComponent('UButton')
 const UCheckbox = resolveComponent('UCheckbox')
+const UDropdownMenu = resolveComponent('UDropdownMenu')
 
 const { t } = useI18n()
 const { ui } = useAppConfig()
@@ -18,9 +20,8 @@ const route = useRoute()
 const { reports } = storeToRefs(useReportsStore())
 const { refreshReports } = useReportsStore()
 const { showErrorMessage } = useNotifications()
-const { backupReports, deleteReports } = useActions()
+const { backupReports, deleteReports, isActionBackup, isActionDelete } = useActions()
 
-const loading = ref(false)
 const backupModel = ref<Report>()
 const deleteModel = ref<Report>()
 const modal = reactive({
@@ -29,16 +30,12 @@ const modal = reactive({
   bulkDelete: false,
   delete: false
 })
-
+const globalFilter = ref('')
 const selectedRows = ref<Record<string, boolean | undefined>>({})
 
 const tableRef = useTemplateRef('tableRef')
-const columnFilters = ref([{ id: 'branchName', value: '' }])
 const rowSelection = ref({})
-const sorting = ref([
-  { id: 'branchName', desc: false },
-  { id: 'createDate', desc: false }
-])
+const sorting = ref([{ id: 'branchName', desc: false }])
 
 const isRowsSelected = computed(() => Object.keys(selectedRows.value).length)
 
@@ -79,10 +76,8 @@ async function handleDeleteReport() {
     return
   }
 
-  loading.value = true
   await deleteReports({ folders: [deleteModel.value?.id], type: 'reports' })
   await refreshReports()
-  loading.value = false
   toggleDeleteModal()
 }
 
@@ -92,7 +87,6 @@ async function handleDeleteReports() {
     return
   }
 
-  loading.value = true
   await deleteReports({
     folders: Object.entries(selectedRows.value)
       .filter(([_, value]) => value)
@@ -100,7 +94,6 @@ async function handleDeleteReports() {
     type: 'reports'
   })
   await refreshReports()
-  loading.value = false
   toggleDeleteSelected(true)
 }
 
@@ -110,9 +103,7 @@ async function handleBackupReport() {
     return
   }
 
-  loading.value = true
   await backupReports({ folders: [backupModel.value?.id] })
-  loading.value = false
   toggleBackupModal()
 }
 
@@ -122,14 +113,66 @@ async function handleBackupReports() {
     return
   }
 
-  loading.value = true
   await backupReports({
     folders: Object.entries(selectedRows.value)
       .filter(([_, value]) => value)
       .map(([key]) => key)
   })
-  loading.value = false
   toggleBackupSelected(true)
+}
+
+function getHeader(column: Column<Report>, label: string) {
+  const isSorted = column.getIsSorted()
+
+  return h(
+    UDropdownMenu,
+    {
+      content: {
+        align: 'start'
+      },
+      items: [
+        {
+          label: t('global.asc'),
+          type: 'checkbox',
+          icon: ui.icons.arrowNarrowUp,
+          checked: isSorted === 'asc',
+          onSelect: () => {
+            if (isSorted === 'asc') {
+              column.clearSorting()
+            } else {
+              column.toggleSorting(false)
+            }
+          }
+        },
+        {
+          label: t('global.desc'),
+          icon: ui.icons.arrowNarrowDown,
+          type: 'checkbox',
+          checked: isSorted === 'desc',
+          onSelect: () => {
+            if (isSorted === 'desc') {
+              column.clearSorting()
+            } else {
+              column.toggleSorting(true)
+            }
+          }
+        }
+      ]
+    },
+    () =>
+      h(UButton, {
+        color: 'neutral',
+        variant: 'ghost',
+        label,
+        icon: isSorted
+          ? isSorted === 'asc'
+            ? ui.icons.arrowNarrowUp
+            : ui.icons.arrowNarrowDown
+          : ui.icons.arrowUpDown,
+        class: '-mx-2.5 data-[state=open]:bg-elevated'
+        // onClick: () => column.toggleSorting(column.getIsSorted() === 'asc')
+      })
+  )
 }
 
 function getReportDate(createDate: string) {
@@ -209,9 +252,13 @@ const columns: TableColumn<Report>[] = [
         'onUpdate:modelValue': (value: boolean | 'indeterminate') => {
           table.toggleAllPageRowsSelected(!!value)
           if (value) {
-            reports.value.forEach((item) => {
-              selectedRows.value[item.id] = !!value
-            })
+            for (const key in rowSelection.value) {
+              reports.value.forEach((item, index) => {
+                if (index === Number(key)) {
+                  selectedRows.value[item.id] = !!value
+                }
+              })
+            }
           } else {
             if (Object.keys(selectedRows.value).length) {
               for (const key in selectedRows.value) {
@@ -240,30 +287,28 @@ const columns: TableColumn<Report>[] = [
   {
     id: 'branchName',
     accessorKey: 'branchName',
-    header: ({ column }) => {
-      const isSorted = column.getIsSorted()
-
-      return h(UButton, {
-        color: 'neutral',
-        variant: 'ghost',
-        label: t('reports.columns.branchName'),
-        icon: isSorted
-          ? isSorted === 'asc'
-            ? ui.icons.arrowNarrowUp
-            : ui.icons.arrowNarrowDown
-          : ui.icons.arrowUpDown,
-        class: '-mx-2.5',
-        onClick: () => column.toggleSorting(column.getIsSorted() === 'asc')
-      })
-    },
+    header: ({ column }) => getHeader(column, t('reports.columns.branchName')),
     cell: ({ row }) => {
       return h('span', { class: 'font-semibold' }, `${row.getValue('branchName')}`)
     }
   },
   {
     accessorKey: 'createDate',
-    header: t('reports.columns.createDate'),
-    cell: ({ row }) => getReportDate(row.getValue('createDate'))
+    header: ({ column }) => getHeader(column, t('reports.columns.createDate')),
+    cell: ({ row }) => {
+      return new Date(row.getValue('createDate')).toLocaleString('en-US', {
+        day: 'numeric',
+        month: 'short',
+        hour: '2-digit',
+        minute: '2-digit',
+        hour12: false
+      })
+    }
+  },
+  {
+    accessorKey: 'createdBy',
+    header: ({ column }) => getHeader(column, t('reports.columns.createdBy')),
+    cell: ({ row }) => (row.getValue('createdBy') ? row.getValue('createdBy') : '')
   },
   {
     id: 'size_text',
@@ -317,12 +362,7 @@ const columns: TableColumn<Report>[] = [
       >
         <template #header>
           <div class="w-full flex flex-wrap gap-2 justify-between">
-            <UInput
-              :model-value="tableRef?.tableApi?.getColumn('branchName')?.getFilterValue() as string"
-              class="max-w-sm"
-              :placeholder="t('global.filter')"
-              @update:model-value="tableRef?.tableApi?.getColumn('branchName')?.setFilterValue($event)"
-            />
+            <UInput v-model="globalFilter" class="max-w-sm" :placeholder="t('global.filter')" />
 
             <div v-if="isRowsSelected" class="flex gap-2">
               <UButton color="secondary" variant="outline" @click="() => toggleBackupSelected()">
@@ -336,7 +376,7 @@ const columns: TableColumn<Report>[] = [
         </template>
         <UTable
           ref="tableRef"
-          v-model:column-filters="columnFilters"
+          v-model:global-filter="globalFilter"
           v-model:row-selection="rowSelection"
           v-model:sorting="sorting"
           :sorting-options="{ enableMultiSort: true }"
@@ -377,7 +417,13 @@ const columns: TableColumn<Report>[] = [
         </UPageCard>
       </template>
       <template #footer>
-        <UButton color="error" :label="t('actions.delete')" :loading="loading" @click="handleDeleteReport" />
+        <UButton
+          color="error"
+          :label="t('actions.delete')"
+          :disabled="isActionDelete"
+          :loading="isActionDelete"
+          @click="handleDeleteReport"
+        />
         <UButton color="neutral" variant="outline" :label="t('actions.cancel')" @click="() => toggleDeleteModal()" />
       </template>
     </UModal>
@@ -398,7 +444,13 @@ const columns: TableColumn<Report>[] = [
         </UScrollArea>
       </template>
       <template #footer>
-        <UButton color="error" :label="t('actions.delete')" :loading="loading" @click="handleDeleteReports" />
+        <UButton
+          color="error"
+          :label="t('actions.delete')"
+          :disabled="isActionDelete"
+          :loading="isActionDelete"
+          @click="handleDeleteReports"
+        />
         <UButton color="neutral" variant="outline" :label="t('actions.cancel')" @click="() => toggleDeleteSelected()" />
       </template>
     </UModal>
@@ -426,7 +478,13 @@ const columns: TableColumn<Report>[] = [
         </UPageCard>
       </template>
       <template #footer>
-        <UButton color="primary" :label="t('actions.backup')" :loading="loading" @click="handleBackupReport" />
+        <UButton
+          color="primary"
+          :label="t('actions.backup')"
+          :disabled="isActionBackup"
+          :loading="isActionBackup"
+          @click="handleBackupReport"
+        />
         <UButton color="neutral" variant="outline" :label="t('actions.cancel')" @click="() => toggleBackupModal()" />
       </template>
     </UModal>
@@ -447,7 +505,13 @@ const columns: TableColumn<Report>[] = [
         </UScrollArea>
       </template>
       <template #footer>
-        <UButton color="primary" :label="t('actions.backup')" :loading="loading" @click="handleBackupReports" />
+        <UButton
+          color="primary"
+          :label="t('actions.backup')"
+          :disabled="isActionBackup"
+          :loading="isActionBackup"
+          @click="handleBackupReports"
+        />
         <UButton color="neutral" variant="outline" :label="t('actions.cancel')" @click="() => toggleBackupSelected()" />
       </template>
     </UModal>
