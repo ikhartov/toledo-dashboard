@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { h, resolveComponent } from 'vue'
 import type { DiskSpace, FormatedBytes, JobStatus, SelectedApp } from '~~/shared/types'
-import type { CommandPaletteGroup, ProgressProps, TableColumn } from '@nuxt/ui'
+import type { CommandPaletteGroup, CommandPaletteItem, ProgressProps, TableColumn } from '@nuxt/ui'
 
 definePageMeta({
   middleware: 'auth'
@@ -43,6 +43,7 @@ const modal = reactive({
 })
 const searchQuery = ref('')
 const selectedApp = ref<SelectedApp | null>(null)
+const showSelectedAppError = ref(false)
 const misMatchThreshold = ref(globalMismatchThreshold.value)
 
 const storageUsedPercent = computed(() => {
@@ -110,12 +111,26 @@ function getApplicationsInfo(): CommandPaletteGroup[] {
   ]
 }
 
+function handleShowAppError(payload?: CommandPaletteItem) {
+  if (!payload) {
+    showSelectedAppError.value = true
+    return
+  }
+
+  showSelectedAppError.value = false
+}
+
 async function handleCreateReferences() {
   await createReferences({ userName: userName.value, userId: userId.value })
   toggleCreateReferenceModal()
 }
 
 async function handleStartTest() {
+  if (!selectedApp.value) {
+    handleShowAppError()
+    return
+  }
+
   await startTest({
     application: selectedApp.value?.app,
     misMatchThreshold: misMatchThreshold.value,
@@ -288,12 +303,20 @@ const columns: TableColumn<JobStatus>[] = [
         </UFormField>
         <USeparator class="my-4" />
         <UPageHeader :headline="t('modal.startSelectedTest.headline')" :ui="{ root: 'py-0', headline: 'mb-2' }" />
+        <UAlert
+          v-if="showSelectedAppError"
+          color="error"
+          variant="subtle"
+          :description="t('modal.startSelectedTest.errors.app')"
+          :icon="ui.icons.warning"
+        />
         <UCommandPalette
           v-model:search-term="searchQuery"
           v-model="selectedApp"
           :groups="getApplicationsInfo()"
           :placeholder="t('modal.startSelectedTest.searchPlaceholder')"
           class="max-h-64"
+          @update:model-value="handleShowAppError"
         >
           <template #close>
             <UButton

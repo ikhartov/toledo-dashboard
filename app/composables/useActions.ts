@@ -38,13 +38,11 @@ export const useActions = () => {
       await $fetch(`/api/${currentRoute.value.params.project}/action/reference`, { method: 'post', body })
 
       await refreshJobsStatus()
-      await refreshReports()
       isActionCreate.value = false
     } catch (error) {
       showErrorMessage(error)
 
       await refreshJobsStatus()
-      await refreshReports()
       isActionCreate.value = false
     }
   }

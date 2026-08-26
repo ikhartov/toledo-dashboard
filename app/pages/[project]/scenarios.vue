@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { h, resolveComponent } from 'vue'
 import type { Scenario, SelectedApp } from '~~/shared/types'
-import type { TableColumn, CommandPaletteGroup } from '@nuxt/ui'
+import type { TableColumn, CommandPaletteGroup, CommandPaletteItem } from '@nuxt/ui'
 
 type SelectedRows = Record<string, boolean | undefined>
 
@@ -42,6 +42,7 @@ const modal = reactive({
 const searchQuery = ref('')
 const selectedRows = ref<SelectedRows>({})
 const selectedApp = ref<SelectedApp | null>(null)
+const showSelectedAppError = ref(false)
 const misMatchThreshold = ref(globalMismatchThreshold.value)
 const tableRef = useTemplateRef('tableRef')
 const columnFilters = ref([{ id: 'label', value: '' }])
@@ -102,6 +103,15 @@ function getApplicationsInfo(): CommandPaletteGroup[] {
   ]
 }
 
+function handleShowAppError(payload?: CommandPaletteItem) {
+  if (!payload) {
+    showSelectedAppError.value = true
+    return
+  }
+
+  showSelectedAppError.value = false
+}
+
 async function handleCreateReferences() {
   await createReferences({
     scenarios: Object.entries(selectedRows.value)
@@ -114,6 +124,11 @@ async function handleCreateReferences() {
 }
 
 async function handleStartTest() {
+  if (!selectedApp.value) {
+    handleShowAppError()
+    return
+  }
+
   await startTest({
     application: selectedApp.value?.app,
     misMatchThreshold: misMatchThreshold.value,
@@ -318,12 +333,20 @@ const columns: TableColumn<Scenario>[] = [
         </UFormField>
         <USeparator class="my-4" />
         <UPageHeader :headline="t('modal.startSelectedTest.headline')" :ui="{ root: 'py-0', headline: 'mb-2' }" />
+        <UAlert
+          v-if="showSelectedAppError"
+          color="error"
+          variant="subtle"
+          :description="t('modal.startSelectedTest.errors.app')"
+          :icon="ui.icons.warning"
+        />
         <UCommandPalette
           v-model:search-term="searchQuery"
           v-model="selectedApp"
           :groups="getApplicationsInfo()"
           :placeholder="t('modal.startSelectedTest.searchPlaceholder')"
           class="max-h-64"
+          @update:model-value="handleShowAppError"
         >
           <template #close>
             <UButton

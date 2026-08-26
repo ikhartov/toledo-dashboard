@@ -106,6 +106,9 @@ export default {
         }
       },
       description: 'Config parameters for test',
+      errors: {
+        app: 'Select an application for testing'
+      },
       headline: 'Choose application',
       misMatchThreshold: 'Mismatch threshold',
       misMatchThresholdPlaceholder: 'Set mismatch threshold',
